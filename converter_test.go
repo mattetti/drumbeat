@@ -1,6 +1,7 @@
 package drumbeat
 
 import (
+	"io"
 	"testing"
 
 	"github.com/mattetti/audio/midi"
@@ -35,22 +36,20 @@ func TestToMIDI(t *testing.T) {
 				return
 			}
 			// Verify the generated MIDI
-			/*
-				// Rewind the buffer
-				buf.Seek(0, io.SeekStart)
-				extractedPatterns, err := FromMIDI(buf)
-				if err != nil {
-					t.Fatalf("FromMIDI failed to decode - %s", err)
-				}
-				if len(extractedPatterns) != len(patterns) {
-					t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
-				}
-				for i, extr := range extractedPatterns {
-					if extr.Steps.String() != tt.patterns[i] {
-						t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
-					}
-				}
-			*/
+			// Rewind the buffer
+			buf.Seek(0, io.SeekStart)
+			extractedPatterns, err := FromMIDI(buf)
+			if err != nil {
+				t.Fatalf("FromMIDI failed to decode - %s", err)
+			}
+			if len(extractedPatterns) != len(patterns) {
+				t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
+			}
+			// for i, extr := range extractedPatterns {
+			// 	if extr.Steps.String() != tt.patterns[i] {
+			// 		t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
+			// 	}
+			// }
 		})
 	}
 }
