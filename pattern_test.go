@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/mattetti/audio/midi"
 )
 
 func TestPulses_Offset(t *testing.T) {
@@ -47,6 +49,47 @@ func TestPulses_String(t *testing.T) {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			if got := tt.pulses.String(); got != tt.want {
 				t.Errorf("Pulses.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewFromString(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+		want *Pattern
+	}{
+		{name: "basic", str: "x...x...x...", want: &Pattern{
+			StepDuration: midi.Dur8th,
+			Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
+			Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
+		},
+		{name: "with uppercase X", str: "X...x...X...", want: &Pattern{
+			StepDuration: midi.Dur8th,
+			Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
+			Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
+		},
+		{name: "without dots", str: "X___x   X~~~", want: &Pattern{
+			StepDuration: midi.Dur8th,
+			Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
+			Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
+		},
+		{name: "blank", str: "blank", want: &Pattern{
+			StepDuration: midi.Dur8th,
+			Steps:        []float64{0.0, 0.0, 0.0, 0.0, 0.0},
+			Velocity:     []float64{0.0, 0.0, 0.0, 0.0, 0.0}},
+		},
+		{name: "empty", str: "", want: &Pattern{
+			StepDuration: midi.Dur8th,
+			Steps:        []float64{},
+			Velocity:     []float64{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewFromString(tt.str); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewFromString() = %v, want %v", got, tt.want)
 			}
 		})
 	}

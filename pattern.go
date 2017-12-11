@@ -2,7 +2,27 @@ package drumbeat
 
 import (
 	"bytes"
+	"strings"
+
+	"github.com/mattetti/audio/midi"
 )
+
+// NewFromString converts a string where `x` are converted into active pulses.
+// The default step duration is 1/8th and the pulse is on for the entire step.
+// Default velocity is 0.9
+func NewFromString(str string) *Pattern {
+	pat := &Pattern{StepDuration: midi.Dur8th}
+	pat.Steps = make(Pulses, len(str))
+	pat.Velocity = make([]float64, len(str))
+	for i, r := range strings.ToLower(str) {
+		if r == 'x' {
+			pat.Steps[i] = 1.0
+			pat.Velocity[i] = 0.9
+		}
+	}
+
+	return pat
+}
 
 // Pattern represent the content of a drum pattern/beat.
 type Pattern struct {
