@@ -3,6 +3,7 @@ package drumbeat
 import (
 	"testing"
 
+	"github.com/mattetti/audio/midi"
 	"github.com/mattetti/filebuffer"
 )
 
@@ -20,15 +21,36 @@ func TestToMIDI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := filebuffer.New(nil)
+			buf := filebuffer.New(nil)
 			patterns := make([]*Pattern, len(tt.patterns))
+			startingKey := midi.KeyInt("C", 1)
 			for i, strPat := range tt.patterns {
 				patterns[i] = NewFromString(strPat)
+				patterns[i].Key = startingKey + i
 			}
-			if err := ToMIDI(w, patterns...); (err != nil) != tt.wantErr {
+			if err := ToMIDI(buf, patterns...); (err != nil) != tt.wantErr {
 				t.Errorf("ToMIDI() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			// TODO: parse the MIDI and compare the patterns
+			if len(patterns) < 1 {
+				return
+			}
+			// Verify the generated MIDI
+			/*
+				// Rewind the buffer
+				buf.Seek(0, io.SeekStart)
+				extractedPatterns, err := FromMIDI(buf)
+				if err != nil {
+					t.Fatalf("FromMIDI failed to decode - %s", err)
+				}
+				if len(extractedPatterns) != len(patterns) {
+					t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
+				}
+				for i, extr := range extractedPatterns {
+					if extr.Steps.String() != tt.patterns[i] {
+						t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
+					}
+				}
+			*/
 		})
 	}
 }
