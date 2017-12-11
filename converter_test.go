@@ -13,7 +13,8 @@ func TestToMIDI(t *testing.T) {
 		wantErr  bool
 	}{
 		{name: "no patterns"},
-		{name: "single pattern", patterns: []string{"x...x...x..."}},
+		{name: "single pattern", patterns: []string{"x...x..."}},
+		{name: "multiple patterns", patterns: []string{"x...x...", "..x...x."}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
