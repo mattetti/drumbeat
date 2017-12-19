@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"bitbucket.org/mattetti/drumbeat"
+	"github.com/mattetti/drumbeat"
 )
 
 func main() {
