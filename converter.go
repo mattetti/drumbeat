@@ -1,7 +1,9 @@
 package drumbeat
 
 import (
+	"fmt"
 	"io"
+	"math"
 
 	"github.com/mattetti/audio/midi"
 )
@@ -138,36 +140,62 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 		// TODO: convert events into steps.
 		// check the shortest note which is the delta between on and off
 		// we can simply look at the off events to see the duration of the note
-		shortestNote := uint32(dec.TicksPerQuarterNote)
-		var runningTime uint32
+		gridRes := uint32(dec.TicksPerQuarterNote)
 		for _, ev := range events {
-			runningTime += ev.TimeDelta
 			if ev.MsgType == midi.EventByteMap["NoteOff"] {
-				if ev.TimeDelta > 0 && ev.TimeDelta < shortestNote {
-					shortestNote = ev.TimeDelta
+				if ev.TimeDelta > 0 && ev.TimeDelta < gridRes {
+					gridRes = ev.TimeDelta
 				}
 			}
 		}
-		if shortestNote < uint32(dec.TicksPerQuarterNote) {
-			// fmt.Println(shortestNote, dec.TicksPerQuarterNote)
-			pat.StepDuration = float64(shortestNote) / float64(dec.TicksPerQuarterNote)
+		if gridRes < uint32(dec.TicksPerQuarterNote) {
+			// limit to 1/32 grid
+			if min := (uint32(dec.TicksPerQuarterNote) / 8); min > gridRes {
+				gridRes = min
+			}
+			pat.StepDuration = float64(gridRes) / float64(dec.TicksPerQuarterNote)
 		} else {
-			pat.StepDuration = float64(dec.TicksPerQuarterNote) / float64(shortestNote)
+			pat.StepDuration = float64(dec.TicksPerQuarterNote) / float64(gridRes)
 		}
-		// fmt.Println("step duration", pat.StepDuration)
-		// fmt.Println("running time", runningTime)
-		// fmt.Println("number of steps", float64(runningTime)/float64(dec.TicksPerQuarterNote))
 
+		type absEv struct {
+			start uint32
+			end   uint32
+		}
+
+		absEvs := []*absEv{}
+		var curEvStart uint32
+		var runningTime uint32
 		for _, ev := range events {
 			runningTime += ev.TimeDelta
 			if ev.MsgType == midi.EventByteMap["NoteOn"] {
-				// fmt.Printf("x")
+				curEvStart = runningTime
 			}
 			if ev.MsgType == midi.EventByteMap["NoteOff"] {
-				// fmt.Printf("_")
+				absEvs = append(absEvs,
+					&absEv{start: curEvStart, end: runningTime})
+				curEvStart = 0
 			}
 		}
-		// fmt.Println()
+		// fmt.Println("grid length note", gridRes, "; duration", runningTime)
+		nbrSteps := math.Ceil(float64(runningTime) / float64(gridRes))
+		pat.Steps = make(Pulses, int(nbrSteps))
+
+		// TODO(mattetti): set velocity
+		for i, _ := range pat.Steps {
+			start := uint32(i) * gridRes
+			end := (uint32(i) + 1) * gridRes
+			for _, e := range absEvs {
+				if e.start >= start && e.end <= end {
+					pat.Steps[i] = pat.StepDuration
+					break
+				}
+			}
+		}
+
+		for _, e := range absEvs {
+			fmt.Printf("From %d to %d\n", e.start, e.end)
+		}
 
 		// fmt.Println(events)
 		patterns = append(patterns, pat)

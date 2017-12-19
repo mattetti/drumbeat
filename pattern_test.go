@@ -3,6 +3,7 @@ package drumbeat
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/mattetti/audio/midi"
@@ -47,8 +48,9 @@ func TestPulses_String(t *testing.T) {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			if got := tt.pulses.String(); got != tt.want {
-				t.Errorf("Pulses.String() = %v, want %v", got, tt.want)
+			want := strings.ToLower(tt.want)
+			if got := tt.pulses.String(); got != want {
+				t.Errorf("Pulses.String() = %v, want %v", got, want)
 			}
 		})
 	}
@@ -88,7 +90,7 @@ func TestNewFromString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFromString(tt.str); !reflect.DeepEqual(got, tt.want) {
+			if got := NewFromString(tt.str)[0]; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewFromString() = %v, want %v", got, tt.want)
 			}
 		})

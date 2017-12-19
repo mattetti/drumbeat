@@ -1,6 +1,7 @@
 package drumbeat
 
 import (
+	"fmt"
 	"io"
 	"testing"
 
@@ -26,7 +27,7 @@ func TestToMIDI(t *testing.T) {
 			patterns := make([]*Pattern, len(tt.patterns))
 			startingKey := midi.KeyInt("C", 1)
 			for i, strPat := range tt.patterns {
-				patterns[i] = NewFromString(strPat)
+				patterns[i] = NewFromString(strPat)[0]
 				patterns[i].Key = startingKey + i
 			}
 			if err := ToMIDI(buf, patterns...); (err != nil) != tt.wantErr {
@@ -45,11 +46,12 @@ func TestToMIDI(t *testing.T) {
 			if len(extractedPatterns) != len(patterns) {
 				t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
 			}
-			// for i, extr := range extractedPatterns {
-			// 	if extr.Steps.String() != tt.patterns[i] {
-			// 		t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
-			// 	}
-			// }
+			fmt.Printf("%#v\n", extractedPatterns[0])
+			for i, extr := range extractedPatterns {
+				if extr.Steps.String() != tt.patterns[i] {
+					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
+				}
+			}
 		})
 	}
 }

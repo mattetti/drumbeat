@@ -10,7 +10,8 @@ import (
 // NewFromString converts a string where `x` are converted into active pulses.
 // The default step duration is 1/8th and the pulse is on for the entire step.
 // Default velocity is 0.9
-func NewFromString(str string) *Pattern {
+// TODO(mattetti): support multiplexing patterns when separated by a `;`
+func NewFromString(str string) []*Pattern {
 	pat := &Pattern{StepDuration: midi.Dur8th}
 	pat.Steps = make(Pulses, len(str))
 	pat.Velocity = make([]float64, len(str))
@@ -21,7 +22,7 @@ func NewFromString(str string) *Pattern {
 		}
 	}
 
-	return pat
+	return []*Pattern{pat}
 }
 
 // Pattern represent the content of a drum pattern/beat.
@@ -64,7 +65,7 @@ func (pulses Pulses) String() string {
 	buf := bytes.Buffer{}
 	for _, s := range pulses {
 		if s > 0.0 {
-			buf.WriteString(`X`)
+			buf.WriteString(`x`)
 		} else {
 			buf.WriteString(`.`)
 		}
