@@ -1,7 +1,6 @@
 package drumbeat
 
 import (
-	"fmt"
 	"io"
 	"math"
 
@@ -193,11 +192,10 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 			}
 		}
 
-		for _, e := range absEvs {
-			fmt.Printf("From %d to %d\n", e.start, e.end)
-		}
+		// for _, e := range absEvs {
+		// 	fmt.Printf("From %d to %d\n", e.start, e.end)
+		// }
 
-		// fmt.Println(events)
 		patterns = append(patterns, pat)
 	}
 
