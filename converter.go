@@ -1,7 +1,6 @@
 package drumbeat
 
 import (
-	"fmt"
 	"io"
 	"math"
 
@@ -174,7 +173,7 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 	}
 
 	for pitch, events := range absEvs {
-		fmt.Printf("%s %#v\n", midi.NoteToName(pitch), events)
+		// fmt.Printf("%s %#v\n", midi.NoteToName(pitch), events)
 		if len(events) < 1 {
 			continue
 		}
