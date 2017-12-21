@@ -8,7 +8,7 @@ import (
 	"github.com/mattetti/drumbeat"
 )
 
-func Example() {
+func ExampleNewFromString() {
 	patternStr := "x.xxx...x...x.x.x..x.xx.x..x.xxx"
 	patterns := drumbeat.NewFromString(patternStr)
 	f, err := os.Create("drumbeat.mid")
