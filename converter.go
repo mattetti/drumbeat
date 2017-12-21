@@ -1,6 +1,7 @@
 package drumbeat
 
 import (
+	"fmt"
 	"io"
 	"math"
 
@@ -88,18 +89,37 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 		return nil, err
 	}
 	// fmt.Println("PPQN: ", dec.TicksPerQuarterNote)
-	var lastNoteOffOffset uint32
+	lastNoteOffOffset := map[string]uint32{}
 	totalDuration := uint32(0) // in ticks
-	notePatterns := map[string][]*midi.Event{}
 	patterns := []*Pattern{}
+
+	// absolute representation of a pulse the duration of the event indicates
+	// how long it lasts but the pulse will be represented as a single hit at
+	// the grid resolution
+	type absEv struct {
+		start    uint32
+		duration uint32
+		vel      uint8
+	}
+
+	absEvs := map[int][]absEv{}
+	curEvsStart := map[string]int{}
 
 	// We expect to only have 1 track with the patterns being transcribed across
 	// notes where a note is a specific drum sample/instrument.
 	for _, t := range dec.Tracks {
 		for _, ev := range t.Events {
 			totalDuration += ev.TimeDelta
-			// fmt.Printf("%s @ %.2f beats\n", midi.EventMap[ev.MsgType], float64(totalDuration))
+			pitch := int(ev.Note)
+			n := midi.NoteToName(pitch)
+			// fmt.Printf("%s %s @ %.2f beats\n", n, midi.EventMap[ev.MsgType], float64(totalDuration))
 
+			if _, ok := absEvs[pitch]; !ok {
+				absEvs[pitch] = []absEv{}
+			}
+			if _, ok := curEvsStart[n]; !ok {
+				curEvsStart[n] = -1
+			}
 			switch ev.MsgType {
 			// TODO: check for a time signature
 			// case midi.EventByteMap["Meta"]:
@@ -108,93 +128,81 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 			// 		timeSignature = ev.TimeSignature
 			// 	}
 			case midi.EventByteMap["NoteOn"]:
-				n := midi.NoteToName(int(ev.Note))
-				if _, ok := notePatterns[n]; !ok {
-					notePatterns[n] = []*midi.Event{}
+				if curEvsStart[n] >= 0 {
+					// end previous note
+					start := uint32(curEvsStart[n])
+					absEvs[pitch] = append(absEvs[pitch], absEv{
+						start:    start,
+						duration: totalDuration - start,
+						vel:      ev.Velocity},
+					)
 				}
-				notePatterns[n] = append(notePatterns[n], ev)
-				lastNoteOffOffset = 0
+				curEvsStart[n] = int(totalDuration)
+				lastNoteOffOffset[n] = 0
 			case midi.EventByteMap["NoteOff"]:
-				if lastNoteOffOffset != 0 {
+				if lastNoteOffOffset[n] != 0 {
 					// we have many notes off following each other
-					lastNoteOffOffset += ev.TimeDelta
+					lastNoteOffOffset[n] += ev.TimeDelta
 				} else {
-					lastNoteOffOffset = ev.TimeDelta
+					lastNoteOffOffset[n] = ev.TimeDelta
 				}
-				n := midi.NoteToName(int(ev.Note))
-				if _, ok := notePatterns[n]; !ok {
-					notePatterns[n] = []*midi.Event{}
-				}
-				notePatterns[n] = append(notePatterns[n], ev)
+				start := uint32(curEvsStart[n])
+				absEvs[pitch] = append(absEvs[pitch], absEv{start: start, duration: totalDuration - start})
+				curEvsStart[n] = -1
 			}
 		}
 	}
 
-	// look at the note patterns as drum patterns and extract their sequencing
-	for note, events := range notePatterns {
-		if len(events) < 1 || events[0] == nil {
+	gridRes := uint32(dec.TicksPerQuarterNote)
+	for _, events := range absEvs {
+		if len(events) < 1 {
 			continue
 		}
-		pat := &Pattern{Name: note, Key: int(events[0].Note)}
-		// TODO: convert events into steps.
-		// check the shortest note which is the delta between on and off
-		// we can simply look at the off events to see the duration of the note
-		gridRes := uint32(dec.TicksPerQuarterNote)
+
 		for _, ev := range events {
-			if ev.MsgType == midi.EventByteMap["NoteOff"] {
-				if ev.TimeDelta > 0 && ev.TimeDelta < gridRes {
-					gridRes = ev.TimeDelta
-				}
+			if ev.duration > 0 && ev.duration < gridRes {
+				gridRes = ev.duration
 			}
 		}
+	}
+
+	if gridRes < uint32(dec.TicksPerQuarterNote) {
+		// limit to 1/32 grid
+		if min := (uint32(dec.TicksPerQuarterNote) / 8); min > gridRes {
+			gridRes = min
+		}
+	}
+
+	for pitch, events := range absEvs {
+		fmt.Printf("%s %#v\n", midi.NoteToName(pitch), events)
+		if len(events) < 1 {
+			continue
+		}
+		pat := &Pattern{Name: midi.NoteToName(pitch), Key: pitch}
 		if gridRes < uint32(dec.TicksPerQuarterNote) {
-			// limit to 1/32 grid
-			if min := (uint32(dec.TicksPerQuarterNote) / 8); min > gridRes {
-				gridRes = min
-			}
 			pat.StepDuration = float64(gridRes) / float64(dec.TicksPerQuarterNote)
 		} else {
 			pat.StepDuration = float64(dec.TicksPerQuarterNote) / float64(gridRes)
 		}
 
-		type absEv struct {
-			start uint32
-			end   uint32
-		}
-
-		absEvs := []*absEv{}
-		var curEvStart uint32
-		var runningTime uint32
-		for _, ev := range events {
-			runningTime += ev.TimeDelta
-			if ev.MsgType == midi.EventByteMap["NoteOn"] {
-				curEvStart = runningTime
-			}
-			if ev.MsgType == midi.EventByteMap["NoteOff"] {
-				absEvs = append(absEvs,
-					&absEv{start: curEvStart, end: runningTime})
-				curEvStart = 0
-			}
-		}
-		// fmt.Println("duration", totalDuration, gridRes)
-		// fmt.Println("grid length note", gridRes, "; duration", runningTime)
 		nbrSteps := math.Ceil(float64(totalDuration) / float64(gridRes))
-		// fmt.Println(nbrSteps)
 		pat.Steps = make(Pulses, int(nbrSteps))
+		pat.Velocity = make([]float64, int(nbrSteps))
 
 		// TODO(mattetti): set velocity
 		for i := range pat.Steps {
 			start := uint32(i) * gridRes
-			end := (uint32(i) + 1) * gridRes
-			for _, e := range absEvs {
-				if e.start >= start && e.end <= end {
+			for _, e := range events {
+				if e.start == start {
 					pat.Steps[i] = pat.StepDuration
+					pat.Velocity[i] = float64(e.vel) / 127.0
 					break
 				}
 			}
 		}
 
 		patterns = append(patterns, pat)
+
 	}
 
 	return patterns, nil

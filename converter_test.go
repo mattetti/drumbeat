@@ -3,19 +3,29 @@ package drumbeat
 import (
 	"io"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/mattetti/audio/midi"
 	"github.com/mattetti/filebuffer"
 )
 
+// TODO: test velocity
 func TestFromMIDI(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     string
-		patterns []string
+		patterns map[string]string
 	}{
-		{name: "single pattern", path: "fixtures/singlePattern.mid", patterns: []string{"x...x..."}},
+		{name: "single pattern", path: "fixtures/singlePattern.mid", patterns: map[string]string{"C1": "x...x..."}},
+		{name: "full beat", path: "fixtures/beat.mid", patterns: map[string]string{
+			"C1":  "x.......x...x...x.......x.......",
+			"E1":  "........................x.......",
+			"G#1": "x.xxx...x...x.x.x..x.xx.x..x.xxx",
+			"D#1": "........x...............x.......",
+			"F#1": "x...x.......x...x...x...x...x...",
+		},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -28,9 +38,12 @@ func TestFromMIDI(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for i, p := range patterns {
-				if tt.patterns[i] != p.Steps.String() {
-					t.Errorf("Expected %s, got %s", tt.patterns[i], p.Steps)
+			if len(patterns) != len(tt.patterns) {
+				t.Fatalf("Expected %d patterns; got %d patterns", len(tt.patterns), len(patterns))
+			}
+			for _, p := range patterns {
+				if tt.patterns[p.Name] != p.Steps.String() {
+					t.Errorf("Expected %s: %s, got %s", p.Name, tt.patterns[p.Name], p.Steps)
 				}
 			}
 		})
@@ -40,23 +53,27 @@ func TestFromMIDI(t *testing.T) {
 func TestToMIDI(t *testing.T) {
 	tests := []struct {
 		name     string
-		patterns []string
+		patterns map[string]string
 		wantErr  bool
 	}{
 		{name: "no patterns"},
-		{name: "single pattern", patterns: []string{"x...x..."}},
-		{name: "last step is a pulse", patterns: []string{"x...x..x"}},
-		{name: "multiple patterns", patterns: []string{"x...x...", "..x...x."}},
-		{name: "multiple similar patterns", patterns: []string{"x...x...", "x...x..."}},
+		{name: "single pattern", patterns: map[string]string{"C1": "x...x..."}},
+		{name: "last step is a pulse", patterns: map[string]string{"C1": "x...x..x"}},
+		{name: "following pulses", patterns: map[string]string{"C1": "xxx.x..x"}},
+		{name: "multiple patterns", patterns: map[string]string{"C1": "x...x...", "C#1": "..x...x."}},
+		{name: "multiple similar patterns", patterns: map[string]string{"C1": "x...x...", "C#1": "x...x..."}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := filebuffer.New(nil)
 			patterns := make([]*Pattern, len(tt.patterns))
-			startingKey := midi.KeyInt("C", 1)
-			for i, strPat := range tt.patterns {
+			// startingKey := midi.KeyInt("C", 1)
+			var i int
+			for strKey, strPat := range tt.patterns {
 				patterns[i] = NewFromString(strPat)[0]
-				patterns[i].Key = startingKey + i
+				oct, _ := strconv.Atoi(strKey[len(strKey)-1:])
+				patterns[i].Key = midi.KeyInt(strKey[:len(strKey)-1], oct)
+				i++
 			}
 			if err := ToMIDI(buf, patterns...); (err != nil) != tt.wantErr {
 				t.Errorf("ToMIDI() error = %v, wantErr %v", err, tt.wantErr)
@@ -85,9 +102,9 @@ func TestToMIDI(t *testing.T) {
 				t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
 			}
 			for i, extr := range extractedPatterns {
-				t.Logf("Got: %#v\n", extr)
-				if extr.Steps.String() != tt.patterns[i] {
-					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
+				// t.Logf("Got: %#v\n", extr)
+				if extr.Steps.String() != tt.patterns[extr.Name] {
+					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[extr.Name], extr.Steps.String())
 				}
 			}
 		})
