@@ -15,65 +15,65 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 	e := midi.NewEncoder(w, 0, 96)
 
 	nbrSteps := len(patterns[0].Steps)
-	// Mix and matching step duration is currently broken
+	//TODO: Mix and matching step duration is currently broken
 
 	trackState := map[int]bool{}
 
 	tr := e.NewTrack()
-	delta := 0.0
-	pushedDelta := false
+	var delta float64
+	// var pushedDelta bool
 	var currentStepDuration float64
 	// loop through all the steps, one step at a time and inject
 	// all track states inside the same channel.
 	for i := 0; i < nbrSteps; i++ {
 		if i > 0 {
-			if pushedDelta {
-				delta = currentStepDuration
-			} else {
-				delta += currentStepDuration
-			}
+			delta += currentStepDuration
 		}
-		pushedDelta = false
 		for _, t := range patterns {
 			currentStepDuration = t.StepDuration
-			noteVal := t.Key
+			notePitch := t.Key
 			var stepVal float64
 			// guard
 			if len(t.Steps) > i {
 				stepVal = t.Steps[i]
 			}
-			// stop previously played noted
+
+			// empty step: stop playing note if needed
 			if stepVal == 0.0 {
-				on, ok := trackState[noteVal]
-				if ok && on {
-					tr.Add(delta, midi.NoteOff(0, noteVal))
-					trackState[noteVal] = false
+				if on, ok := trackState[notePitch]; ok && on {
+					// note is playing,let's stop it
+					tr.Add(delta, midi.NoteOff(0, notePitch))
+					trackState[notePitch] = false
 					delta = 0.0
-					pushedDelta = true
 				}
 				continue
 			}
+
+			// we have a pulse!
+
+			// TODO: maybe offer a difference between x an X for velocity
 			vel := 90
-			// stop notes that are already playing
-			if on, ok := trackState[noteVal]; ok && on {
-				tr.Add(delta, midi.NoteOff(0, noteVal))
-				delta = 0.0
-			}
-			tr.Add(delta, midi.NoteOn(0, noteVal, vel))
-			trackState[noteVal] = true
+			tr.Add(delta, midi.NoteOn(0, notePitch, vel))
+			// mark note as playing
+			trackState[notePitch] = true
 			delta = 0.0
-			pushedDelta = true
 		}
 	}
-	lastStepSet := false
-	delta = currentStepDuration
-	for n, on := range trackState {
+
+	var wroteLastStep bool
+	for pitch, on := range trackState {
 		if on {
-			tr.Add(delta, midi.NoteOff(0, n))
-			if !lastStepSet {
-				lastStepSet = true
-			}
+			tr.Add(delta+currentStepDuration, midi.NoteOff(0, pitch))
+			delta = 0
+			wroteLastStep = true
 		}
+	}
+
+	// end the track after the last step
+	if wroteLastStep {
+		tr.Add(0, midi.EndOfTrack())
+	} else {
+		tr.Add(delta+currentStepDuration, midi.EndOfTrack())
 	}
 
 	return e.Write()
@@ -89,7 +89,7 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 	}
 	// fmt.Println("PPQN: ", dec.TicksPerQuarterNote)
 	var lastNoteOffOffset uint32
-	runningTime := uint32(0) // in ticks
+	totalDuration := uint32(0) // in ticks
 	notePatterns := map[string][]*midi.Event{}
 	patterns := []*Pattern{}
 
@@ -97,8 +97,8 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 	// notes where a note is a specific drum sample/instrument.
 	for _, t := range dec.Tracks {
 		for _, ev := range t.Events {
-			runningTime += ev.TimeDelta
-			// fmt.Println(midi.EventMap[ev.MsgType], float64(runningTime), "beats")
+			totalDuration += ev.TimeDelta
+			// fmt.Printf("%s @ %.2f beats\n", midi.EventMap[ev.MsgType], float64(totalDuration))
 
 			switch ev.MsgType {
 			// TODO: check for a time signature
@@ -176,12 +176,14 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 				curEvStart = 0
 			}
 		}
+		// fmt.Println("duration", totalDuration, gridRes)
 		// fmt.Println("grid length note", gridRes, "; duration", runningTime)
-		nbrSteps := math.Ceil(float64(runningTime) / float64(gridRes))
+		nbrSteps := math.Ceil(float64(totalDuration) / float64(gridRes))
+		// fmt.Println(nbrSteps)
 		pat.Steps = make(Pulses, int(nbrSteps))
 
 		// TODO(mattetti): set velocity
-		for i, _ := range pat.Steps {
+		for i := range pat.Steps {
 			start := uint32(i) * gridRes
 			end := (uint32(i) + 1) * gridRes
 			for _, e := range absEvs {
@@ -191,10 +193,6 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 				}
 			}
 		}
-
-		// for _, e := range absEvs {
-		// 	fmt.Printf("From %d to %d\n", e.start, e.end)
-		// }
 
 		patterns = append(patterns, pat)
 	}

@@ -1,13 +1,41 @@
 package drumbeat
 
 import (
-	"fmt"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/mattetti/audio/midi"
 	"github.com/mattetti/filebuffer"
 )
+
+func TestFromMIDI(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		patterns []string
+	}{
+		{name: "single pattern", path: "fixtures/singlePattern.mid", patterns: []string{"x...x..."}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, err := os.Open(tt.path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer f.Close()
+			patterns, err := FromMIDI(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i, p := range patterns {
+				if tt.patterns[i] != p.Steps.String() {
+					t.Errorf("Expected %s, got %s", tt.patterns[i], p.Steps)
+				}
+			}
+		})
+	}
+}
 
 func TestToMIDI(t *testing.T) {
 	tests := []struct {
@@ -39,6 +67,16 @@ func TestToMIDI(t *testing.T) {
 			// Verify the generated MIDI
 			// Rewind the buffer
 			buf.Seek(0, io.SeekStart)
+
+			// debugging
+			// of, err := os.Create("test.mid")
+			// if err != nil {
+			// 	t.Fatal(err)
+			// }
+			// defer of.Close()
+			// of.Write(buf.Bytes())
+			// buf.Seek(0, io.SeekStart)
+
 			extractedPatterns, err := FromMIDI(buf)
 			if err != nil {
 				t.Fatalf("FromMIDI failed to decode - %s", err)
@@ -46,8 +84,8 @@ func TestToMIDI(t *testing.T) {
 			if len(extractedPatterns) != len(patterns) {
 				t.Errorf("Expected %d patterns, but got %d", len(patterns), len(extractedPatterns))
 			}
-			fmt.Printf("%#v\n", extractedPatterns[0])
 			for i, extr := range extractedPatterns {
+				t.Logf("Got: %#v\n", extr)
 				if extr.Steps.String() != tt.patterns[i] {
 					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[i], extr.Steps.String())
 				}
