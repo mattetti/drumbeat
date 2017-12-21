@@ -1,6 +1,6 @@
 # drumbeat
 
-Drum beat is a Go library to handle drum beat patterns
+Drumbeat is a Go library to create/parse drum beat patterns.
 
 [![GoDoc](https://godoc.org/github.com/mattetti/drumbeat?status.svg)](https://godoc.org/github.com/mattetti/drumbeat)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mattetti/drumbeat)](https://goreportcard.com/report/github.com/mattetti/drumbeat)
