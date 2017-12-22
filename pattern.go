@@ -10,8 +10,8 @@ import (
 // NewFromString converts a string where `x` are converted into active pulses.
 // The default step duration is 1/8th and the pulse is on for the entire step.
 // Default velocity is 0.9
-// TODO(mattetti): support multiplexing patterns when separated by a `;`
 func NewFromString(str string) []*Pattern {
+	// TODO(mattetti): support multiplexing patterns when separated by a `;`
 	pat := &Pattern{StepDuration: midi.Dur8th}
 	pat.Steps = make(Pulses, len(str))
 	pat.Velocity = make([]float64, len(str))
