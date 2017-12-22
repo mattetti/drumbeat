@@ -24,3 +24,17 @@ func ExampleNewFromString() {
 	f.Close()
 	os.Remove(f.Name())
 }
+
+func ExamplePulse_Offset() {
+	patternStr := "x..xx..."
+	patterns := drumbeat.NewFromString(patternStr)
+	patterns[0].Steps = patterns[0].Steps.Offset(2)
+	fmt.Println(patterns[0].Steps)
+	patterns[0].Steps = patterns[0].Steps.Offset(-2)
+	fmt.Println(patterns[0].Steps)
+	patterns[0].Steps = patterns[0].Steps.Offset(-2)
+	fmt.Println(patterns[0].Steps)
+	// Output: ..x..xx.
+	// x..xx...
+	// .xx...x.
+}
