@@ -25,6 +25,20 @@ func ExampleNewFromString() {
 	os.Remove(f.Name())
 }
 
+func ExampleFromMIDI() {
+	f, err := os.Open("fixtures/singlePattern.mid")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	patterns, err := drumbeat.FromMIDI(f)
+	if err != nil {
+		log.Fatalf("Failed to parse the MIDI file - %v", err)
+	}
+	fmt.Println(patterns[0].Steps)
+	// Output: x...x...
+}
+
 func ExamplePulses_Offset() {
 	patternStr := "x..xx..."
 	patterns := drumbeat.NewFromString(patternStr)
