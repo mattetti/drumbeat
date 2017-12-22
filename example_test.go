@@ -25,7 +25,7 @@ func ExampleNewFromString() {
 	os.Remove(f.Name())
 }
 
-func ExamplePulse_Offset() {
+func ExamplePulses_Offset() {
 	patternStr := "x..xx..."
 	patterns := drumbeat.NewFromString(patternStr)
 	patterns[0].Steps = patterns[0].Steps.Offset(2)
