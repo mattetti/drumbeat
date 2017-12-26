@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	flag.Parse()
 	patternStr := flag.String("pattern", "x...x...", "The pattern to convert to MIDI")
 	flag.Parse()
 	patterns := drumbeat.NewFromString(*patternStr)

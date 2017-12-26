@@ -24,8 +24,11 @@ func TestFromMIDI(t *testing.T) {
 			"G#1": "x.xxx...x...x.x.x..x.xx.x..x.xxx",
 			"D#1": "........x...............x.......",
 			"F#1": "x...x.......x...x...x...x...x...",
-		},
-		},
+		}},
+		{name: "kick snare unquantized", path: "fixtures/kickSnare.mid", patterns: map[string]string{
+			"C1": "x.......x.......x.......x.......x.......x.......x.......x.......",
+			"D1": "...xx.x....xx.x....xx.x....xx.x....xx.x....xx.x....xx.x....xx.x.",
+		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -42,8 +45,11 @@ func TestFromMIDI(t *testing.T) {
 				t.Fatalf("Expected %d patterns; got %d patterns", len(tt.patterns), len(patterns))
 			}
 			for _, p := range patterns {
-				if tt.patterns[p.Name] != p.Steps.String() {
-					t.Errorf("Expected %s: %s, got %s", p.Name, tt.patterns[p.Name], p.Steps)
+				if tt.patterns[p.Name] != p.Pulses.String() {
+					if len(tt.patterns[p.Name]) != len(p.Pulses) {
+						t.Errorf("%s - expected %d Pulses, got %d", p.Name, len(tt.patterns[p.Name]), len(p.Pulses))
+					}
+					t.Errorf("Expected %s:\n%s, got\n%s", p.Name, tt.patterns[p.Name], p.Pulses)
 				}
 			}
 		})
@@ -103,8 +109,8 @@ func TestToMIDI(t *testing.T) {
 			}
 			for i, extr := range extractedPatterns {
 				// t.Logf("Got: %#v\n", extr)
-				if extr.Steps.String() != tt.patterns[extr.Name] {
-					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[extr.Name], extr.Steps.String())
+				if extr.Pulses.String() != tt.patterns[extr.Name] {
+					t.Errorf("Expected pattern %d to look like %s but got %s", i, tt.patterns[extr.Name], extr.Pulses.String())
 				}
 			}
 		})

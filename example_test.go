@@ -35,19 +35,19 @@ func ExampleFromMIDI() {
 	if err != nil {
 		log.Fatalf("Failed to parse the MIDI file - %v", err)
 	}
-	fmt.Printf("%s: %s", patterns[0].Name, patterns[0].Steps)
+	fmt.Printf("%s: %s", patterns[0].Name, patterns[0].Pulses)
 	// Output: C1: x...x...
 }
 
 func ExamplePulses_Offset() {
 	patternStr := "x..xx..."
 	patterns := drumbeat.NewFromString(patternStr)
-	patterns[0].Steps = patterns[0].Steps.Offset(2)
-	fmt.Println(patterns[0].Steps)
-	patterns[0].Steps = patterns[0].Steps.Offset(-2)
-	fmt.Println(patterns[0].Steps)
-	patterns[0].Steps = patterns[0].Steps.Offset(-2)
-	fmt.Println(patterns[0].Steps)
+	patterns[0].Pulses = patterns[0].Pulses.Offset(2)
+	fmt.Println(patterns[0].Pulses)
+	patterns[0].Pulses = patterns[0].Pulses.Offset(-2)
+	fmt.Println(patterns[0].Pulses)
+	patterns[0].Pulses = patterns[0].Pulses.Offset(-2)
+	fmt.Println(patterns[0].Pulses)
 	// Output: ..x..xx.
 	// x..xx...
 	// .xx...x.
