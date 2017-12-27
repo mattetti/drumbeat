@@ -31,8 +31,8 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 
 	tr := e.NewTrack()
 	var delta uint32
-	// var pushedDelta bool
 
+	// 1/8th
 	currentStepDuration := uint32(ppq) / 2
 	// loop through all the steps, one step at a time and inject
 	// all track states inside the same channel.

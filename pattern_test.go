@@ -8,27 +8,27 @@ import (
 )
 
 func TestPulses_Offset(t *testing.T) {
+	onTheOne := &Pulse{Ticks: 0, Duration: 96 / 2, Velocity: 90}
+	onTheOneDev2 := &Pulse{Ticks: 96 / 2, Duration: 96 / 2, Velocity: 90}
+	// onTheTwo := &Pulse{Ticks: 96, Duration: 96 / 2, Velocity: 90}
+
+	// TODO: check that thechange the start time of the events have been updated
+
 	tests := []struct {
 		name   string
 		pulses Pulses
 		n      int
 		want   Pulses
 	}{
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift 2 to the right once again", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift by the length of the slice", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
-		{name: "shift by more than the length of the slice", pulses: []*Pulse{}, n: 3, want: []*Pulse{}},
-		{name: "shift by more than the length of the slice once again", pulses: []*Pulse{}, n: 5, want: []*Pulse{}},
-		{name: "shift by huge number", pulses: []*Pulse{}, n: 42, want: []*Pulse{}},
-		{name: "shift using a negative value to go the other way around", pulses: []*Pulse{}, n: -2, want: []*Pulse{}},
-		{name: "shift negatively by more than the length of the slice", pulses: []*Pulse{}, n: -4, want: []*Pulse{}},
-		{name: "shift negatively by a huge number", pulses: []*Pulse{}, n: -46, want: []*Pulse{}},
+		{name: "shift 2 to the right", pulses: []*Pulse{onTheOne, nil, nil, nil}, n: 2, want: []*Pulse{nil, nil, onTheOne, nil}},
+		{name: "shift 2 to the right once again", pulses: []*Pulse{nil, onTheOne, onTheOneDev2, nil}, n: 2, want: []*Pulse{onTheOneDev2, nil, nil, onTheOne}},
+		// {name: "shift by the length of the slice", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
+		// {name: "shift by more than the length of the slice", pulses: []*Pulse{}, n: 3, want: []*Pulse{}},
+		// {name: "shift by more than the length of the slice once again", pulses: []*Pulse{}, n: 5, want: []*Pulse{}},
+		// {name: "shift by huge number", pulses: []*Pulse{}, n: 42, want: []*Pulse{}},
+		// {name: "shift using a negative value to go the other way around", pulses: []*Pulse{}, n: -2, want: []*Pulse{}},
+		// {name: "shift negatively by more than the length of the slice", pulses: []*Pulse{}, n: -4, want: []*Pulse{}},
+		// {name: "shift negatively by a huge number", pulses: []*Pulse{}, n: -46, want: []*Pulse{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
