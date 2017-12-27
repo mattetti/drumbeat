@@ -14,7 +14,6 @@ func NewFromString(str string) []*Pattern {
 	gridRes := ppqn / 2
 	pat := &Pattern{PPQN: uint16(ppqn)}
 	pat.Pulses = make(Pulses, len(str))
-	pat.Velocity = make([]float64, len(str))
 	for i, r := range strings.ToLower(str) {
 		if r == 'x' {
 			pat.Pulses[i] = &Pulse{
@@ -35,8 +34,6 @@ type Pattern struct {
 	// Steps are the values for each step 0.0 means no pulse, a pulse greater
 	// than 0 indicates the duration in beats of the pulse
 	Pulses Pulses
-	// Velocity indicates the velocity of each step between 0 and 1
-	Velocity []float64
 	// Key indicates the MIDI key this pattern should be triggering. Useful when
 	// converting to MIDI
 	Key int
