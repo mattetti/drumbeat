@@ -23,5 +23,6 @@ func main() {
 	if err := drumbeat.ToMIDI(f, patterns...); err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println("drumbeat.mid generated off of", *patternStr)
 }

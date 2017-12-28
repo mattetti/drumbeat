@@ -28,7 +28,7 @@ func main() {
 		log.Fatalf("Failed to parse the MIDI file - %v", err)
 	}
 	for _, p := range patterns {
-		fmt.Printf("%s: %s\n", p.Name, p.Steps)
+		fmt.Printf("%s: %s\n", p.Name, p.Pulses)
 	}
 
 }
