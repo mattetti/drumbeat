@@ -1,7 +1,6 @@
 package drumbeat
 
 import (
-	"fmt"
 	"io"
 	"math"
 
@@ -32,8 +31,8 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 	tr := e.NewTrack()
 	var delta uint32
 
-	// 1/8th
-	currentStepDuration := uint32(ppq) / 2
+	// 1/16th
+	currentStepDuration := uint32(ppq) / 4
 	// loop through all the steps, one step at a time and inject
 	// all track states inside the same channel.
 	for i := 0; i < nbrSteps; i++ {
@@ -101,7 +100,7 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 	patterns := []*Pattern{}
 
 	absEvs := map[int][]absEv{}
-	curEvsStart := map[string]int{}
+	curEvsStart := map[string]*midi.Event{}
 
 	// We expect to only have 1 track with the patterns being transcribed across
 	// notes where a note is a specific drum sample/instrument.
@@ -116,7 +115,7 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 				absEvs[pitch] = []absEv{}
 			}
 			if _, ok := curEvsStart[n]; !ok {
-				curEvsStart[n] = -1
+				curEvsStart[n] = nil
 			}
 			switch ev.MsgType {
 			// TODO: check for a time signature
@@ -126,29 +125,30 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 			// 		timeSignature = ev.TimeSignature
 			// 	}
 			case midi.EventByteMap["NoteOn"]:
-				if curEvsStart[n] >= 0 {
+				if curEvsStart[n] != nil {
 					// end previous note
-					start := uint32(curEvsStart[n])
+					start := uint32(curEvsStart[n].AbsTicks)
 					absEvs[pitch] = append(absEvs[pitch], absEv{
-						start:    uint64(curEvsStart[n]),
+						start:    uint64(curEvsStart[n].AbsTicks),
 						duration: totalDuration - start,
 						vel:      ev.Velocity},
 					)
 				}
-				curEvsStart[n] = int(ev.AbsTicks)
+				curEvsStart[n] = ev
 			case midi.EventByteMap["NoteOff"]:
 				absEvs[pitch] = append(absEvs[pitch],
 					absEv{
-						start:    uint64(curEvsStart[n]),
+						start:    uint64(curEvsStart[n].AbsTicks),
 						duration: totalDuration - uint32(ev.AbsTicks),
+						vel:      curEvsStart[n].Velocity,
 					})
-				curEvsStart[n] = -1
+				curEvsStart[n] = nil
 			}
 		}
 	}
 
 	// 1/16th
-	gridRes := uint32(dec.TicksPerQuarterNote) / 2
+	gridRes := uint32(dec.TicksPerQuarterNote) / 4
 
 	for pitch, events := range absEvs {
 		if len(events) < 1 {
@@ -167,18 +167,14 @@ func FromMIDI(r io.Reader) ([]*Pattern, error) {
 		// TODO: quantize
 		for i := range pat.Pulses {
 			start := uint64(i) * uint64(gridRes)
-			var busy bool
 			for _, e := range events {
 				if e.start >= start && e.start < start+uint64(gridRes) {
-					if busy {
-						fmt.Println("already busy")
-					}
 					pat.Pulses[i] = &Pulse{
 						Ticks:    start,
 						Duration: uint16(gridRes),
 						Velocity: e.vel,
 					}
-					busy = true
+					break
 				}
 			}
 		}

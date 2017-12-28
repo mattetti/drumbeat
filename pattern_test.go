@@ -9,7 +9,7 @@ import (
 
 func TestPulses_Offset(t *testing.T) {
 	onTheOne := &Pulse{Ticks: 0, Duration: 96 / 2, Velocity: 90}
-	onTheOneDev2 := &Pulse{Ticks: 96 / 2, Duration: 96 / 2, Velocity: 90}
+	onTheOneDiv2 := &Pulse{Ticks: 96 / 2, Duration: 96 / 2, Velocity: 90}
 	// onTheTwo := &Pulse{Ticks: 96, Duration: 96 / 2, Velocity: 90}
 
 	// TODO: check that thechange the start time of the events have been updated
@@ -21,8 +21,8 @@ func TestPulses_Offset(t *testing.T) {
 		want   Pulses
 	}{
 		{name: "shift 2 to the right", pulses: []*Pulse{onTheOne, nil, nil, nil}, n: 2, want: []*Pulse{nil, nil, onTheOne, nil}},
-		{name: "shift 2 to the right once again", pulses: []*Pulse{nil, onTheOne, onTheOneDev2, nil}, n: 2, want: []*Pulse{onTheOneDev2, nil, nil, onTheOne}},
-		// {name: "shift by the length of the slice", pulses: []*Pulse{}, n: 2, want: []*Pulse{}},
+		{name: "shift 2 to the right once again", pulses: []*Pulse{nil, onTheOne, onTheOneDiv2, nil}, n: 2, want: []*Pulse{onTheOneDiv2, nil, nil, onTheOne}},
+		{name: "shift by the length of the slice", pulses: []*Pulse{onTheOne, onTheOneDiv2}, n: 2, want: []*Pulse{onTheOne, onTheOneDiv2}},
 		// {name: "shift by more than the length of the slice", pulses: []*Pulse{}, n: 3, want: []*Pulse{}},
 		// {name: "shift by more than the length of the slice once again", pulses: []*Pulse{}, n: 5, want: []*Pulse{}},
 		// {name: "shift by huge number", pulses: []*Pulse{}, n: 42, want: []*Pulse{}},
@@ -50,10 +50,15 @@ func TestPulses_String(t *testing.T) {
 			nil,
 			&Pulse{Ticks: 0, Velocity: 99},
 		}, ".X.X"},
-		{[]*Pulse{}, "...."},
-		{[]*Pulse{}, "XXXX"},
-		{[]*Pulse{}, "XXXX"},
-		{[]*Pulse{}, ".XX."},
+		{[]*Pulse{nil, &Pulse{}, nil, nil, nil, nil, nil, nil}, "........"},
+		{[]*Pulse{
+			&Pulse{Ticks: 0, Velocity: 90}, &Pulse{Ticks: 24, Velocity: 90}, &Pulse{Ticks: 48, Velocity: 90}, &Pulse{Ticks: 72, Velocity: 90},
+			&Pulse{Ticks: 96, Velocity: 90}, &Pulse{Ticks: 120, Velocity: 90}, &Pulse{Ticks: 144, Velocity: 90}, &Pulse{Ticks: 168, Velocity: 90},
+			&Pulse{Ticks: 192, Velocity: 90}, &Pulse{Ticks: 216, Velocity: 90}, &Pulse{Ticks: 240, Velocity: 90}, &Pulse{Ticks: 264, Velocity: 90},
+			&Pulse{Ticks: 288, Velocity: 90}, &Pulse{Ticks: 312, Velocity: 90}, &Pulse{Ticks: 336, Velocity: 90}, &Pulse{Ticks: 360, Velocity: 90}},
+			"XXXXXXXXXXXXXXXX"},
+		{[]*Pulse{&Pulse{Ticks: 0, Velocity: 90}, &Pulse{Ticks: 24, Velocity: 90}, &Pulse{Ticks: 48, Velocity: 90}, &Pulse{Ticks: 72, Velocity: 90}}, "XXXX"},
+		{[]*Pulse{nil, &Pulse{Ticks: 24, Velocity: 90}, &Pulse{Ticks: 48, Velocity: 90}, nil}, ".XX."},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {

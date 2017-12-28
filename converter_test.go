@@ -10,24 +10,25 @@ import (
 	"github.com/mattetti/filebuffer"
 )
 
-// TODO: test velocity
 func TestFromMIDI(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     string
 		patterns map[string]string
 	}{
-		{name: "single pattern", path: "fixtures/singlePattern.mid", patterns: map[string]string{"C1": "x...x..."}},
+		{name: "single pattern", path: "fixtures/singlePattern.mid", patterns: map[string]string{"C1": "x.......x......."}},
+		{name: "kick pattern", path: "fixtures/kick.mid", patterns: map[string]string{"C1": "x...x...x...x..."}},
+		// TODO: this should automatically switch to 1/32th
 		{name: "full beat", path: "fixtures/beat.mid", patterns: map[string]string{
-			"C1":  "x.......x...x...x.......x.......",
-			"E1":  "........................x.......",
-			"G#1": "x.xxx...x...x.x.x..x.xx.x..x.xxx",
-			"D#1": "........x...............x.......",
-			"F#1": "x...x.......x...x...x...x...x...",
+			"C1":  "x...x.x.x...x...",
+			"E1":  "............x...",
+			"G#1": "xxx.x.xxxxxxxxxx", // 1/32th
+			"D#1": "....x.......x...",
+			"F#1": "x.x...x.x.x.x.x.",
 		}},
 		{name: "kick snare unquantized", path: "fixtures/kickSnare.mid", patterns: map[string]string{
-			"C1": "x.......x.......x.......x.......x.......x.......x.......x.......",
-			"D1": "...xx.x....xx.x....xx.x....xx.x....xx.x....xx.x....xx.x....xx.x.",
+			"C1": "x......x.......x.......x.......x.......x.......x.......x........",
+			"D1": "...x.x.....x.x.....x.x.....x.x.....x.x.....x.x.....x.x.....x.x..",
 		}},
 	}
 	for _, tt := range tests {
@@ -62,8 +63,8 @@ func TestToMIDI(t *testing.T) {
 		patterns map[string]string
 		wantErr  bool
 	}{
-		{name: "no patterns"},
-		{name: "single pattern", patterns: map[string]string{"C1": "x...x..."}},
+		// {name: "no patterns"},
+		{name: "single pattern", patterns: map[string]string{"C1": "x...x...x...x..."}},
 		{name: "last step is a pulse", patterns: map[string]string{"C1": "x...x..x"}},
 		{name: "following pulses", patterns: map[string]string{"C1": "xxx.x..x"}},
 		{name: "multiple patterns", patterns: map[string]string{"C1": "x...x...", "C#1": "..x...x."}},
@@ -92,13 +93,13 @@ func TestToMIDI(t *testing.T) {
 			buf.Seek(0, io.SeekStart)
 
 			// debugging
-			// of, err := os.Create("test.mid")
-			// if err != nil {
-			// 	t.Fatal(err)
-			// }
-			// defer of.Close()
-			// of.Write(buf.Bytes())
-			// buf.Seek(0, io.SeekStart)
+			of, err := os.Create("test.mid")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer of.Close()
+			of.Write(buf.Bytes())
+			buf.Seek(0, io.SeekStart)
 
 			extractedPatterns, err := FromMIDI(buf)
 			if err != nil {

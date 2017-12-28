@@ -35,8 +35,9 @@ func ExampleFromMIDI() {
 	if err != nil {
 		log.Fatalf("Failed to parse the MIDI file - %v", err)
 	}
+	// Default to 1/16th grid
 	fmt.Printf("%s: %s", patterns[0].Name, patterns[0].Pulses)
-	// Output: C1: x...x...
+	// Output: C1: x.......x.......
 }
 
 func ExamplePulses_Offset() {

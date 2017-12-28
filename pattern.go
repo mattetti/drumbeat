@@ -71,7 +71,7 @@ func (pulses Pulses) Offset(n int) Pulses {
 func (pulses Pulses) String() string {
 	buf := bytes.Buffer{}
 	for _, s := range pulses {
-		if s != nil {
+		if s != nil && s.Velocity > 0 {
 			// TODO: vel > 100 == A
 			buf.WriteString(`x`)
 		} else {
