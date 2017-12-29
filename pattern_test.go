@@ -71,45 +71,46 @@ func TestPulses_String(t *testing.T) {
 }
 
 func TestNewFromString(t *testing.T) {
-	t.Skip()
-	/*
-		tests := []struct {
-			name string
-			str  string
-			want *Pattern
-		}{
-			{name: "basic", str: "x...x...x...", want: &Pattern{
-				StepDuration: midi.Dur8th,
-				Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
-				Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
-			},
-			{name: "with uppercase X", str: "X...x...X...", want: &Pattern{
-				StepDuration: midi.Dur8th,
-				Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
-				Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
-			},
-			{name: "without dots", str: "X___x   X~~~", want: &Pattern{
-				StepDuration: midi.Dur8th,
-				Steps:        []float64{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0},
-				Velocity:     []float64{0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0}},
-			},
-			{name: "blank", str: "blank", want: &Pattern{
-				StepDuration: midi.Dur8th,
-				Steps:        []float64{0.0, 0.0, 0.0, 0.0, 0.0},
-				Velocity:     []float64{0.0, 0.0, 0.0, 0.0, 0.0}},
-			},
-			{name: "empty", str: "", want: &Pattern{
-				StepDuration: midi.Dur8th,
-				Steps:        []float64{},
-				Velocity:     []float64{}},
-			},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				if got := NewFromString(tt.str)[0]; !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("NewFromString() = %v, want %v", got, tt.want)
-				}
-			})
-		}
-	*/
+	tests := []struct {
+		name string
+		str  string
+		want *Pattern
+	}{
+		{name: "basic", str: "x...x...x...x...", want: &Pattern{
+			PPQN: 96,
+			Pulses: []*Pulse{
+				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 288, Velocity: 90}, nil, nil, nil}},
+		},
+		{name: "with uppercase X", str: "X...x...X...X...", want: &Pattern{
+			PPQN: 96,
+			Pulses: []*Pulse{
+				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 288, Velocity: 90}, nil, nil, nil}},
+		},
+		{name: "without dots", str: "X___x   X~~~*...", want: &Pattern{
+			PPQN: 96,
+			Pulses: []*Pulse{
+				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				&Pulse{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				nil, nil, nil, nil}},
+		},
+		{name: "blank", str: "blank", want: &Pattern{PPQN: 96, Pulses: []*Pulse{nil, nil, nil, nil, nil}}},
+		{name: "empty", str: "", want: &Pattern{PPQN: 96}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewFromString(tt.str)[0].PPQN; !reflect.DeepEqual(got, tt.want.PPQN) {
+				t.Errorf("NewFromString() = %d, want %d", got, tt.want.PPQN)
+			}
+			if got := NewFromString(tt.str)[0].Pulses.String(); !reflect.DeepEqual(got, tt.want.Pulses.String()) {
+				t.Errorf("NewFromString() = %s, want %s", got, tt.want.Pulses)
+			}
+		})
+	}
 }
