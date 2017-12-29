@@ -10,9 +10,10 @@ import (
 // Default velocity is 0.9
 func NewFromString(str string) []*Pattern {
 	// TODO(mattetti): support multiplexing patterns when separated by a `;`
-	ppqn := uint64(96)
+	ppqn := uint64(DefaultPPQN)
+	pat := &Pattern{PPQN: DefaultPPQN, Grid: One16}
 	gridRes := ppqn / 2
-	pat := &Pattern{PPQN: uint16(ppqn)}
+
 	pat.Pulses = make(Pulses, len(str))
 	for i, r := range strings.ToLower(str) {
 		if r == 'x' {
@@ -39,6 +40,30 @@ type Pattern struct {
 	Key int
 	// PPQN is the amount of ticks per quarter note.
 	PPQN uint16
+	// Grid is the resolution of the pattern
+	Grid GridRes
+}
+
+// Offset offsets the slice of pulses by moving the pulses to the right by n
+// positions.
+func (p *Pattern) Offset(n int) {
+	if p == nil {
+		return
+	}
+	total := len(p.Pulses)
+	cutoff := total - (n % total)
+	if cutoff == total {
+		return
+	}
+	if cutoff > total {
+		cutoff -= total
+	}
+	// cutoff is where we are starting now
+	// we need to remove cutoff * step in ticks to the entries after the cutoff
+	// and we need to add `cutoff * step in ticks` to the other steps
+
+	// TODO: offset the Ticks positions
+	p.Pulses = append(p.Pulses[cutoff:], p.Pulses[:cutoff]...)
 }
 
 // Pulses is a collection of ordered pulses
@@ -49,22 +74,6 @@ type Pulse struct {
 	Ticks    uint64
 	Duration uint16
 	Velocity uint8
-}
-
-// Offset offsets the slice of pulses by moving the pulses to the right by n
-// positions.
-func (pulses Pulses) Offset(n int) Pulses {
-	total := len(pulses)
-	cutoff := total - (n % total)
-	if cutoff == total {
-		return pulses
-	}
-	if cutoff > total {
-		cutoff -= total
-	}
-	// TODO: offset the Ticks positions
-	pulses = append(pulses[cutoff:], pulses[:cutoff]...)
-	return pulses
 }
 
 // String implements the stringer interface

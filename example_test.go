@@ -43,11 +43,11 @@ func ExampleFromMIDI() {
 func ExamplePulses_Offset() {
 	patternStr := "x..xx..."
 	patterns := drumbeat.NewFromString(patternStr)
-	patterns[0].Pulses = patterns[0].Pulses.Offset(2)
+	patterns[0].Offset(2)
 	fmt.Println(patterns[0].Pulses)
-	patterns[0].Pulses = patterns[0].Pulses.Offset(-2)
+	patterns[0].Offset(-2)
 	fmt.Println(patterns[0].Pulses)
-	patterns[0].Pulses = patterns[0].Pulses.Offset(-2)
+	patterns[0].Offset(-2)
 	fmt.Println(patterns[0].Pulses)
 	// Output: ..x..xx.
 	// x..xx...

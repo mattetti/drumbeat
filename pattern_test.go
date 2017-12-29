@@ -32,8 +32,10 @@ func TestPulses_Offset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.pulses.Offset(tt.n); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Pulses.Offset() = %#v, want %#v", got, tt.want)
+			pat := &Pattern{PPQN: DefaultPPQN, Grid: One16, Pulses: tt.pulses}
+			pat.Offset(tt.n)
+			if !reflect.DeepEqual(pat.Pulses, tt.want) {
+				t.Errorf("Pulses.Offset() = %#v, want %#v", pat.Pulses, tt.want)
 			}
 		})
 	}
@@ -60,8 +62,8 @@ func TestPulses_String(t *testing.T) {
 		{[]*Pulse{&Pulse{Ticks: 0, Velocity: 90}, &Pulse{Ticks: 24, Velocity: 90}, &Pulse{Ticks: 48, Velocity: 90}, &Pulse{Ticks: 72, Velocity: 90}}, "XXXX"},
 		{[]*Pulse{nil, &Pulse{Ticks: 24, Velocity: 90}, &Pulse{Ticks: 48, Velocity: 90}, nil}, ".XX."},
 	}
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s", tt.want), func(t *testing.T) {
 			want := strings.ToLower(tt.want)
 			if got := tt.pulses.String(); got != want {
 				t.Errorf("Pulses.String() = %v, want %v", got, want)
@@ -77,6 +79,7 @@ func TestNewFromString(t *testing.T) {
 		want *Pattern
 	}{
 		{name: "basic", str: "x...x...x...x...", want: &Pattern{
+			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
@@ -85,6 +88,7 @@ func TestNewFromString(t *testing.T) {
 				&Pulse{Ticks: 288, Velocity: 90}, nil, nil, nil}},
 		},
 		{name: "with uppercase X", str: "X...x...X...X...", want: &Pattern{
+			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
@@ -93,6 +97,7 @@ func TestNewFromString(t *testing.T) {
 				&Pulse{Ticks: 288, Velocity: 90}, nil, nil, nil}},
 		},
 		{name: "without dots", str: "X___x   X~~~*...", want: &Pattern{
+			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				&Pulse{Ticks: 0, Velocity: 90}, nil, nil, nil,
@@ -100,13 +105,16 @@ func TestNewFromString(t *testing.T) {
 				&Pulse{Ticks: 192, Velocity: 90}, nil, nil, nil,
 				nil, nil, nil, nil}},
 		},
-		{name: "blank", str: "blank", want: &Pattern{PPQN: 96, Pulses: []*Pulse{nil, nil, nil, nil, nil}}},
-		{name: "empty", str: "", want: &Pattern{PPQN: 96}},
+		{name: "blank", str: "blank", want: &Pattern{Grid: One16, PPQN: 96, Pulses: []*Pulse{nil, nil, nil, nil, nil}}},
+		{name: "empty", str: "", want: &Pattern{Grid: One16, PPQN: 96}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewFromString(tt.str)[0].PPQN; !reflect.DeepEqual(got, tt.want.PPQN) {
-				t.Errorf("NewFromString() = %d, want %d", got, tt.want.PPQN)
+				t.Errorf("NewFromString().PPQN = %d, want %d", got, tt.want.PPQN)
+			}
+			if got := NewFromString(tt.str)[0].Grid; !reflect.DeepEqual(got, tt.want.Grid) {
+				t.Errorf("NewFromString().grid = %s, want %s", got, tt.want.Grid)
 			}
 			if got := NewFromString(tt.str)[0].Pulses.String(); !reflect.DeepEqual(got, tt.want.Pulses.String()) {
 				t.Errorf("NewFromString() = %s, want %s", got, tt.want.Pulses)
