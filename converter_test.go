@@ -93,13 +93,13 @@ func TestToMIDI(t *testing.T) {
 			buf.Seek(0, io.SeekStart)
 
 			// debugging
-			of, err := os.Create("test.mid")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer of.Close()
-			of.Write(buf.Bytes())
-			buf.Seek(0, io.SeekStart)
+			// of, err := os.Create("test.mid")
+			// if err != nil {
+			// 	t.Fatal(err)
+			// }
+			// defer of.Close()
+			// of.Write(buf.Bytes())
+			// buf.Seek(0, io.SeekStart)
 
 			extractedPatterns, err := FromMIDI(buf)
 			if err != nil {
