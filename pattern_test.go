@@ -137,3 +137,84 @@ func TestNewFromString(t *testing.T) {
 	var nilPat *Pattern
 	nilPat.Offset(42)
 }
+
+func TestPattern_ReAlign(t *testing.T) {
+	tests := []struct {
+		name   string
+		pulses Pulses
+		PPQN   uint16
+		grid   GridRes
+		want   Pulses
+	}{
+		{name: "blank",
+			pulses: Pulses{},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{nil, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "1 step",
+			pulses: Pulses{{Ticks: 0, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{{Ticks: 0, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "1st step in 2nd div",
+			pulses: Pulses{{Ticks: 48, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{nil, {Ticks: 48, Velocity: 90}, nil, nil, nil, nil, nil, nil}},
+		{name: "1st step not quantized",
+			pulses: Pulses{{Ticks: 24, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{{Ticks: 24, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "1st step not quantized - missing nil steps",
+			pulses: Pulses{{Ticks: 24, Velocity: 90}, nil, nil, nil},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{{Ticks: 24, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "2 steps - 1 bars",
+			pulses: Pulses{{Ticks: 0, Velocity: 90}, {Ticks: uint64(DefaultPPQN), Velocity: 90}, nil, nil, nil, nil, nil, nil, nil},
+			PPQN:   DefaultPPQN,
+			grid:   One16,
+			want: Pulses{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: uint64(DefaultPPQN), Velocity: 90}, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "2 steps - fill 2 bars",
+			pulses: Pulses{
+				{Ticks: 0, Velocity: 90}, {Ticks: uint64(DefaultPPQN), Velocity: 90}, nil, nil, nil, nil, nil, nil, nil},
+			PPQN: DefaultPPQN,
+			grid: One8,
+			want: Pulses{
+				{Ticks: 0, Velocity: 90}, nil,
+				{Ticks: uint64(DefaultPPQN), Velocity: 90}, nil,
+				nil, nil,
+				nil, nil,
+				//
+				nil, nil, nil, nil, nil, nil, nil, nil}},
+	}
+	for _, tt := range tests {
+		// Make sure we don't crash on a nil pattern
+		var p *Pattern
+		p.ReAlign()
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Pattern{
+				Name:   tt.name,
+				Pulses: tt.pulses,
+				PPQN:   tt.PPQN,
+				Grid:   tt.grid,
+			}
+			p.ReAlign()
+			if len(p.Pulses) != len(tt.want) {
+				t.Fatalf("expected %d pulses, got %d", len(tt.want), len(p.Pulses))
+			}
+			if !reflect.DeepEqual(tt.want, p.Pulses) {
+				for i, pulse := range p.Pulses {
+					if pulse != tt.want[i] {
+						t.Logf("[%d] wanted %+v got %+v\n", i, tt.want[i], pulse)
+					}
+				}
+				t.Errorf("expected %#v, got %#v", tt.pulses, p.Pulses)
+			}
+		})
+	}
+}

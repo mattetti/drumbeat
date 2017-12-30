@@ -1,7 +1,6 @@
 package drumbeat
 
 import (
-	"bytes"
 	"strings"
 )
 
@@ -44,6 +43,59 @@ type Pattern struct {
 	Grid GridRes
 }
 
+// ReAlign adds the nil steps if the pulses are unbalanced and reorder the steps
+// if needed. This also makes sure we have the right number of pulses to fill
+// full bars.
+func (p *Pattern) ReAlign() {
+	if p == nil {
+		return
+	}
+	var max uint64
+	for _, pulse := range p.Pulses {
+		if pulse == nil {
+			continue
+		}
+		if pulse.Ticks > max {
+			max = pulse.Ticks
+		}
+	}
+	stepSize := p.StepSize()
+	gridSteps := (max + stepSize) / stepSize
+	// trying to fill a bar
+	stepsInBar := int(p.Grid.StepsInBeat() * 4)
+
+	if len(p.Pulses) < stepsInBar {
+		gridSteps = uint64(stepsInBar)
+		p.Pulses = append(p.Pulses, make([]*Pulse, stepsInBar-len(p.Pulses))...)
+	}
+
+	// make sure we fill full bars
+	for i := 0; gridSteps < uint64(len(p.Pulses)) || (int(gridSteps)%stepsInBar != 0); i++ {
+		if i == 0 {
+			gridSteps = uint64(stepsInBar)
+			continue
+		}
+		gridSteps += uint64(stepsInBar)
+	}
+
+	newPulses := make([]*Pulse, gridSteps)
+	for i := uint64(0); i < gridSteps; i++ {
+		start := i * stepSize
+		end := start + stepSize
+		for _, pulse := range p.Pulses {
+			if pulse == nil {
+				continue
+			}
+			if pulse.Ticks >= start && pulse.Ticks < end {
+				// TODO: decide what to do if the step is already taken
+				newPulses[i] = pulse
+			}
+		}
+	}
+
+	p.Pulses = newPulses
+}
+
 // Offset offsets the slice of pulses by moving the pulses to the right by n
 // positions.
 func (p *Pattern) Offset(n int) {
@@ -80,28 +132,4 @@ func (p *Pattern) Offset(n int) {
 		}
 		pulse.Ticks += (uint64(i) * stepSize)
 	}
-}
-
-// Pulses is a collection of ordered pulses
-type Pulses []*Pulse
-
-// Pulse indicates a drum hit
-type Pulse struct {
-	Ticks    uint64
-	Duration uint16
-	Velocity uint8
-}
-
-// String implements the stringer interface
-func (pulses Pulses) String() string {
-	buf := bytes.Buffer{}
-	for _, s := range pulses {
-		if s != nil && s.Velocity > 0 {
-			// TODO: vel > 100 == A
-			buf.WriteString(`x`)
-		} else {
-			buf.WriteString(`.`)
-		}
-	}
-	return buf.String()
 }

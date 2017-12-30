@@ -3,6 +3,21 @@ package drumbeat
 // GridRes is the resolution of the grid for the pattern
 type GridRes string
 
+// StepsInBeat returns the number of steps to fill a beat
+func (g GridRes) StepsInBeat() uint64 {
+	switch g {
+	case One8:
+		return 2
+	case One16:
+		return 4
+	case One32:
+		return 8
+	case One64:
+		return 16
+	}
+	return 1
+}
+
 const (
 	One4  GridRes = "1/4"
 	One8  GridRes = "1/8"
