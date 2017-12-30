@@ -18,10 +18,16 @@ func main() {
 	patternStr := flag.String("pattern", "", "The pattern to convert to MIDI")
 	// 2 beats at 1/16th.
 	genSteps := flag.Int("steps", 32, "Number of steps to use for generation.")
-	genPulses := flag.Int("pulses", 8, "Number of pulses for the steps")
+	genPulses := flag.Int("pulses", 0, "Number of pulses for the steps")
 	genOffset := flag.Int("offset", 0, "Offset for the first pulse")
 
 	flag.Parse()
+	if *genSteps < 8 {
+		*genSteps = 8
+	}
+	if *genPulses < 1 {
+		*genPulses = 1 + *genSteps/8
+	}
 
 	if *patternStr != "" {
 		patterns := drumbeat.NewFromString(*patternStr)
@@ -47,14 +53,14 @@ func main() {
 	kickSeq = append(kickSeq, euclidean.Rhythm((*genPulses/2)+1, *genSteps/2)...)
 	kickBeat := drumbeat.NewFromString(boolsToSeq(kickSeq))[0]
 	if *genOffset != 0 {
-		kickBeat.Pulses = kickBeat.Pulses.Offset(*genOffset)
+		kickBeat.Offset(*genOffset)
 	}
 	kickBeat.Key = midi.KeyInt("C", 1)
 	kickBeat.Name = "Kick"
 
-	snareSeq := euclidean.Rhythm(*genPulses/2, *genSteps)
+	snareSeq := euclidean.Rhythm((*genPulses/2)+1, *genSteps)
 	snareBeat := drumbeat.NewFromString(boolsToSeq(snareSeq))[0]
-	snareBeat.Pulses = snareBeat.Pulses.Offset(*genSteps / 4)
+	snareBeat.Offset(4)
 	snareBeat.Key = midi.KeyInt("D", 1)
 	snareBeat.Name = "Snare"
 
