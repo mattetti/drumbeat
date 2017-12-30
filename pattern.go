@@ -87,7 +87,13 @@ func (p *Pattern) ReAlign() {
 				continue
 			}
 			if pulse.Ticks >= start && pulse.Ticks < end {
-				// TODO: decide what to do if the step is already taken
+				// we only keep 1 pulse per step, the earliest
+				if exPulse := newPulses[i]; exPulse != nil {
+					if exPulse.Ticks > pulse.Ticks {
+						newPulses[i] = pulse
+					}
+					continue
+				}
 				newPulses[i] = pulse
 			}
 		}

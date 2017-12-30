@@ -171,7 +171,17 @@ func TestPattern_ReAlign(t *testing.T) {
 			PPQN:   DefaultPPQN,
 			grid:   One8,
 			want:   Pulses{{Ticks: 24, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
-		{name: "2 steps - 1 bars",
+		{name: "2 pulses in 1 step",
+			pulses: Pulses{{Ticks: 0, Velocity: 90}, {Ticks: 24, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{{Ticks: 0, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "2 unordered pulses in 1 step",
+			pulses: Pulses{{Ticks: 24, Velocity: 90}, {Ticks: 0, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One8,
+			want:   Pulses{{Ticks: 0, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "2 steps - 2 bars",
 			pulses: Pulses{{Ticks: 0, Velocity: 90}, {Ticks: uint64(DefaultPPQN), Velocity: 90}, nil, nil, nil, nil, nil, nil, nil},
 			PPQN:   DefaultPPQN,
 			grid:   One16,
@@ -187,10 +197,29 @@ func TestPattern_ReAlign(t *testing.T) {
 			want: Pulses{
 				{Ticks: 0, Velocity: 90}, nil,
 				{Ticks: uint64(DefaultPPQN), Velocity: 90}, nil,
-				nil, nil,
-				nil, nil,
-				//
+				nil, nil, nil, nil,
 				nil, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "1 step - fill 1 1/32 bar",
+			pulses: Pulses{
+				{Ticks: 0, Velocity: 90}},
+			PPQN: DefaultPPQN,
+			grid: One32,
+			want: Pulses{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil}},
+		{name: "1 step - fill 1 1/64 bar",
+			pulses: Pulses{
+				{Ticks: uint64(DefaultPPQN), Velocity: 90}},
+			PPQN: DefaultPPQN,
+			grid: One64,
+			want: Pulses{
+				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				{Ticks: uint64(DefaultPPQN), Velocity: 90}, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+			}},
 	}
 	for _, tt := range tests {
 		// Make sure we don't crash on a nil pattern
