@@ -51,19 +51,35 @@ func (p *Pattern) Offset(n int) {
 		return
 	}
 	total := len(p.Pulses)
-	cutoff := total - (n % total)
-	if cutoff == total {
+	for n > total {
+		n -= total
+	}
+	cutoffIDX := total - (n % total)
+	if cutoffIDX == total {
 		return
 	}
-	if cutoff > total {
-		cutoff -= total
+	if cutoffIDX > total {
+		cutoffIDX -= total
 	}
-	// cutoff is where we are starting now
-	// we need to remove cutoff * step in ticks to the entries after the cutoff
-	// and we need to add `cutoff * step in ticks` to the other steps
-
-	// TODO: offset the Ticks positions
-	p.Pulses = append(p.Pulses[cutoff:], p.Pulses[:cutoff]...)
+	stepSize := p.StepSize()
+	for i, pulse := range p.Pulses {
+		if pulse == nil {
+			continue
+		}
+		stepTick := (uint64(i) * stepSize)
+		if stepTick > pulse.Ticks {
+			pulse.Ticks = 0
+			continue
+		}
+		pulse.Ticks -= stepTick
+	}
+	p.Pulses = append(p.Pulses[cutoffIDX:], p.Pulses[:cutoffIDX]...)
+	for i, pulse := range p.Pulses {
+		if pulse == nil {
+			continue
+		}
+		pulse.Ticks += (uint64(i) * stepSize)
+	}
 }
 
 // Pulses is a collection of ordered pulses

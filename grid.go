@@ -11,3 +11,20 @@ const (
 	One64 GridRes = "1/64"
 	// TODO: add triplets
 )
+
+// StepSize returns the size of a pattern step in ticks given its grid resolution
+func (p *Pattern) StepSize() uint64 {
+	switch p.Grid {
+	case One4:
+		return uint64(p.PPQN)
+	case One8:
+		return uint64(p.PPQN / 2)
+	case One16:
+		return uint64(p.PPQN / 4)
+	case One32:
+		return uint64(p.PPQN / 8)
+	case One64:
+		return uint64(p.PPQN / 16)
+	}
+	return 0
+}
