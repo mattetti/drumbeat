@@ -1,6 +1,7 @@
 package drumbeat
 
 import (
+	"math"
 	"strings"
 )
 
@@ -61,21 +62,31 @@ func (p *Pattern) ReAlign() {
 	}
 	stepSize := p.StepSize()
 	gridSteps := (max + stepSize) / stepSize
-	// trying to fill a bar
-	stepsInBar := int(p.Grid.StepsInBeat() * 4)
 
-	if len(p.Pulses) < stepsInBar {
-		gridSteps = uint64(stepsInBar)
-		p.Pulses = append(p.Pulses, make([]*Pulse, stepsInBar-len(p.Pulses))...)
+	// set a minimum of steps to have
+	minSteps := int(p.Grid.StepsInBeat() * 4)
+	if max > (uint64(minSteps) * stepSize) {
+		// we have a step that is further than the last step at minimum length
+		steps := int(math.Ceil(float64(max+1) / float64(stepSize)))
+		for (steps % minSteps) != 0 {
+			steps++
+		}
+		minSteps = steps
+	}
+
+	// make sure we fullfill the minimum quota of steps
+	if len(p.Pulses) < minSteps {
+		gridSteps = uint64(minSteps)
+		p.Pulses = append(p.Pulses, make([]*Pulse, int(gridSteps)-len(p.Pulses))...)
 	}
 
 	// make sure we fill full bars
-	for i := 0; gridSteps < uint64(len(p.Pulses)) || (int(gridSteps)%stepsInBar != 0); i++ {
+	for i := 0; gridSteps < uint64(len(p.Pulses)) || (int(gridSteps)%minSteps != 0); i++ {
 		if i == 0 {
-			gridSteps = uint64(stepsInBar)
+			gridSteps = uint64(minSteps)
 			continue
 		}
-		gridSteps += uint64(stepsInBar)
+		gridSteps += uint64(minSteps)
 	}
 
 	newPulses := make([]*Pulse, gridSteps)

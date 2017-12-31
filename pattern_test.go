@@ -220,11 +220,23 @@ func TestPattern_ReAlign(t *testing.T) {
 				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			}},
+		{name: "spread out pulses",
+			// over 4 bars
+			pulses: Pulses{{Ticks: 0, Velocity: 90}, {Ticks: 384, Velocity: 90}, {Ticks: 768, Velocity: 90}, {Ticks: 1152, Velocity: 90}},
+			PPQN:   DefaultPPQN,
+			grid:   One16,
+			want: Pulses{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				{Ticks: 384, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				{Ticks: 768, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				{Ticks: 1152, Velocity: 90}, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+			}},
 	}
 	for _, tt := range tests {
 		// Make sure we don't crash on a nil pattern
 		var p *Pattern
 		p.ReAlign()
+
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Pattern{
 				Name:   tt.name,
