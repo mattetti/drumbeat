@@ -27,6 +27,7 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 		t.ReAlign()
 	}
 
+	// FIXME: we shouldn't rely on the length of the first pattern
 	nbrSteps := len(patterns[0].Pulses)
 	ppq := patterns[0].PPQN
 	e := midi.NewEncoder(w, 0, ppq)
@@ -36,7 +37,7 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 	tr := e.NewTrack()
 	var delta uint32
 
-	// 4/4 time signature
+	// FIXME: use the actual pattern duration.
 	currentStepDuration := uint32(ppq) / 4
 	// loop through all the steps, one step at a time and inject
 	// all track states inside the same channel.
@@ -65,8 +66,7 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 
 			// we have a pulse!
 
-			tr.AddAfterDelta(delta, midi.NoteOn(0, notePitch, 90))
-			// TODO: use => tr.AddAfterDelta(uint32(stepVal.Ticks), midi.NoteOn(0, notePitch, int(stepVal.Velocity)))
+			tr.AddAfterDelta(delta, midi.NoteOn(0, notePitch, int(stepVal.Velocity)))
 			// mark note as playing
 			trackState[notePitch] = true
 			delta = 0.0
