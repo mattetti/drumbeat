@@ -5,9 +5,15 @@ import (
 	"strings"
 )
 
+var (
+	patStrReplacer = strings.NewReplacer("\t", "", "\n", "")
+)
+
 // NewFromString converts a string where `x` are converted into active pulses.
 // The first argument is the resolution of the grid so we can define how many
 // steps fit in a bar. Default velocity is 0.9
+//
+// Multiple patterns can be provided if separated by a semi colon: `;`.
 func NewFromString(grid GridRes, str string) []*Pattern {
 	// support multiplexing of patterns by separating them by a `;`
 	patStrs := strings.Split(str, ";")
@@ -18,6 +24,7 @@ func NewFromString(grid GridRes, str string) []*Pattern {
 		pat := &Pattern{PPQN: DefaultPPQN, Grid: grid}
 		gridRes := ppqn / grid.StepsInBeat()
 
+		patStr = patStrReplacer.Replace(patStr)
 		pat.Pulses = make(Pulses, len(patStr))
 		for i, r := range strings.ToLower(patStr) {
 			if r == 'x' {

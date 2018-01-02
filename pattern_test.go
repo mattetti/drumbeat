@@ -99,6 +99,16 @@ func TestNewFromString(t *testing.T) {
 				{Ticks: 192, Velocity: 90}, nil, nil, nil,
 				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
 		},
+		{name: "basic with return carriage and tabs", str: `x...x...
+			x...x...`, want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
 		{name: "with uppercase X", str: "X...x...X...X...", want: []*Pattern{{
 			Grid: One16,
 			PPQN: 96,
