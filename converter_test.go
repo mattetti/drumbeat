@@ -116,4 +116,30 @@ func TestToMIDI(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("autoset key", func(t *testing.T) {
+		patterns := NewFromString(One8, "x.......;....x...")
+		buf := filebuffer.New(nil)
+		if err := ToMIDI(buf, patterns...); err != nil {
+			t.Fatalf("ToMIDI() error = %v", err)
+		}
+		if len(patterns) != 2 {
+			t.Fatalf("expected to have 2 patterns from string")
+		}
+		buf.Seek(0, io.SeekStart)
+		extractedPatterns, err := FromMIDI(buf)
+		if err != nil {
+			t.Fatalf("FromMIDI failed to decode - %s", err)
+		}
+		if len(extractedPatterns) != 2 {
+			t.Fatalf("expected to have extracted 2 patterns")
+		}
+		if extractedPatterns[0].Key != 36 {
+			t.Fatalf("expected to the first extracted pattern to be set to C1 but was %v", extractedPatterns[0].Key)
+		}
+		if extractedPatterns[1].Key != 37 {
+			t.Fatalf("expected to the first extracted pattern to be set to C#1 but was %v", extractedPatterns[1].Key)
+		}
+	})
+
 }
