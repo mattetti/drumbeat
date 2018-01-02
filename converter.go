@@ -22,9 +22,18 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 		return nil
 	}
 
+	// we are going to check if we have 2 patterns with their key at C-1 if
+	// that's the case, we'll assume that the keys weren't set.
+	areKeysSet := true
+	startingKey := midi.KeyInt("C", 1)
 	// Realign before converting
-	for _, t := range patterns {
+	for i, t := range patterns {
 		t.ReAlign()
+		if i > 0 {
+			if patterns[0].Key == 0 && t.Key == 0 {
+				areKeysSet = false
+			}
+		}
 	}
 
 	// FIXME: we shouldn't rely on the length of the first pattern
@@ -46,8 +55,11 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 			// FIXME: don't automatically quantize the pulses
 			delta += currentStepDuration
 		}
-		for _, t := range patterns {
+		for n, t := range patterns {
 			notePitch := t.Key
+			if !areKeysSet && notePitch == 0 {
+				notePitch = startingKey + n
+			}
 			var stepVal *Pulse
 			// guard
 			if len(t.Pulses) > i {

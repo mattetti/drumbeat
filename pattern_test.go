@@ -8,7 +8,6 @@ import (
 )
 
 func TestPulses_Offset(t *testing.T) {
-
 	tests := []struct {
 		name   string
 		pulses Pulses
