@@ -10,7 +10,7 @@ import (
 
 func ExampleNewFromString() {
 	patternStr := "x.xxx...x...x.x.x..x.xx.x..x.xxx"
-	patterns := drumbeat.NewFromString(patternStr)
+	patterns := drumbeat.NewFromString(drumbeat.One8, patternStr)
 	f, err := os.Create("drumbeat.mid")
 	if err != nil {
 		log.Println("something wrong happened when creating the MIDI file", err)
@@ -42,7 +42,7 @@ func ExampleFromMIDI() {
 
 func ExamplePulses_Offset() {
 	patternStr := "x..xx..."
-	patterns := drumbeat.NewFromString(patternStr)
+	patterns := drumbeat.NewFromString(drumbeat.One8, patternStr)
 	patterns[0].Offset(2)
 	fmt.Println(patterns[0].Pulses)
 	patterns[0].Offset(-2)

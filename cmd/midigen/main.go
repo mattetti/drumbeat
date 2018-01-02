@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if *patternStr != "" {
-		patterns := drumbeat.NewFromString(*patternStr)
+		patterns := drumbeat.NewFromString(drumbeat.One16, *patternStr)
 		f, err := os.Create("drumbeat.mid")
 		if err != nil {
 			log.Println("something wrong happened when creating the MIDI file", err)

@@ -77,7 +77,7 @@ func TestToMIDI(t *testing.T) {
 			// startingKey := midi.KeyInt("C", 1)
 			var i int
 			for strKey, strPat := range tt.patterns {
-				patterns[i] = NewFromString(strPat)[0]
+				patterns[i] = NewFromString(One8, strPat)[0]
 				oct, _ := strconv.Atoi(strKey[len(strKey)-1:])
 				patterns[i].Key = midi.KeyInt(strKey[:len(strKey)-1], oct)
 				i++

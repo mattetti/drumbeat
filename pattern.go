@@ -8,11 +8,11 @@ import (
 // NewFromString converts a string where `x` are converted into active pulses.
 // The default step duration is 1/8th and the pulse is on for the entire step.
 // Default velocity is 0.9
-func NewFromString(str string) []*Pattern {
+func NewFromString(grid GridRes, str string) []*Pattern {
 	// TODO(mattetti): support multiplexing patterns when separated by a `;`
 	ppqn := uint64(DefaultPPQN)
-	pat := &Pattern{PPQN: DefaultPPQN, Grid: One16}
-	gridRes := ppqn / 2
+	pat := &Pattern{PPQN: DefaultPPQN, Grid: grid}
+	gridRes := ppqn / grid.StepsInBeat()
 
 	pat.Pulses = make(Pulses, len(str))
 	for i, r := range strings.ToLower(str) {
@@ -149,4 +149,19 @@ func (p *Pattern) Offset(n int) {
 		}
 		pulse.Ticks += (uint64(i) * stepSize)
 	}
+}
+
+// compact removes the nil pulses.
+func (p *Pattern) compact() {
+	if p == nil {
+		return
+	}
+	pulses := []*Pulse{}
+	for _, pulse := range p.Pulses {
+		if pulse == nil {
+			continue
+		}
+		pulses = append(pulses, pulse)
+	}
+	p.Pulses = pulses
 }
