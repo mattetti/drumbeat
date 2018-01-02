@@ -43,6 +43,7 @@ func ToMIDI(w io.WriteSeeker, patterns ...*Pattern) error {
 	// all track states inside the same channel.
 	for i := 0; i < nbrSteps; i++ {
 		if i > 0 {
+			// FIXME: don't automatically quantize the pulses
 			delta += currentStepDuration
 		}
 		for _, t := range patterns {
