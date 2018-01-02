@@ -6,26 +6,32 @@ import (
 )
 
 // NewFromString converts a string where `x` are converted into active pulses.
-// The default step duration is 1/8th and the pulse is on for the entire step.
-// Default velocity is 0.9
+// The first argument is the resolution of the grid so we can define how many
+// steps fit in a bar. Default velocity is 0.9
 func NewFromString(grid GridRes, str string) []*Pattern {
-	// TODO(mattetti): support multiplexing patterns when separated by a `;`
-	ppqn := uint64(DefaultPPQN)
-	pat := &Pattern{PPQN: DefaultPPQN, Grid: grid}
-	gridRes := ppqn / grid.StepsInBeat()
+	// support multiplexing of patterns by separating them by a `;`
+	patStrs := strings.Split(str, ";")
 
-	pat.Pulses = make(Pulses, len(str))
-	for i, r := range strings.ToLower(str) {
-		if r == 'x' {
-			pat.Pulses[i] = &Pulse{
-				Ticks:    gridRes * uint64(i),
-				Velocity: 90,
-				Duration: uint16(gridRes),
+	patterns := []*Pattern{}
+	ppqn := uint64(DefaultPPQN)
+	for _, patStr := range patStrs {
+		pat := &Pattern{PPQN: DefaultPPQN, Grid: grid}
+		gridRes := ppqn / grid.StepsInBeat()
+
+		pat.Pulses = make(Pulses, len(patStr))
+		for i, r := range strings.ToLower(patStr) {
+			if r == 'x' {
+				pat.Pulses[i] = &Pulse{
+					Ticks:    gridRes * uint64(i),
+					Velocity: 90,
+					Duration: uint16(gridRes),
+				}
 			}
 		}
+		patterns = append(patterns, pat)
 	}
 
-	return []*Pattern{pat}
+	return patterns
 }
 
 // Pattern represent the content of a drum pattern/beat.

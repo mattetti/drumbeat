@@ -88,48 +88,71 @@ func TestNewFromString(t *testing.T) {
 	tests := []struct {
 		name string
 		str  string
-		want *Pattern
+		want []*Pattern
 	}{
-		{name: "basic", str: "x...x...x...x...", want: &Pattern{
+		{name: "basic", str: "x...x...x...x...", want: []*Pattern{{
 			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				{Ticks: 0, Velocity: 90}, nil, nil, nil,
 				{Ticks: 96, Velocity: 90}, nil, nil, nil,
 				{Ticks: 192, Velocity: 90}, nil, nil, nil,
-				{Ticks: 288, Velocity: 90}, nil, nil, nil}},
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
 		},
-		{name: "with uppercase X", str: "X...x...X...X...", want: &Pattern{
+		{name: "with uppercase X", str: "X...x...X...X...", want: []*Pattern{{
 			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				{Ticks: 0, Velocity: 90}, nil, nil, nil,
 				{Ticks: 96, Velocity: 90}, nil, nil, nil,
 				{Ticks: 192, Velocity: 90}, nil, nil, nil,
-				{Ticks: 288, Velocity: 90}, nil, nil, nil}},
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
 		},
-		{name: "without dots", str: "X___x   X~~~*...", want: &Pattern{
+		{name: "without dots", str: "X___x   X~~~*...", want: []*Pattern{{
 			Grid: One16,
 			PPQN: 96,
 			Pulses: []*Pulse{
 				{Ticks: 0, Velocity: 90}, nil, nil, nil,
 				{Ticks: 96, Velocity: 90}, nil, nil, nil,
 				{Ticks: 192, Velocity: 90}, nil, nil, nil,
-				nil, nil, nil, nil}},
+				nil, nil, nil, nil}}},
 		},
-		{name: "blank", str: "blank", want: &Pattern{Grid: One8, PPQN: 96, Pulses: []*Pulse{nil, nil, nil, nil, nil}}},
-		{name: "empty", str: "", want: &Pattern{Grid: One8, PPQN: 96}},
+		{name: "blank", str: "blank", want: []*Pattern{{Grid: One8, PPQN: 96, Pulses: []*Pulse{nil, nil, nil, nil, nil}}}},
+		{name: "empty", str: "", want: []*Pattern{{Grid: One8, PPQN: 96}}},
+		{name: "basic 2 patterns", str: "x.......x.......;....x.......x...", want: []*Pattern{
+			{Grid: One16,
+				PPQN: 96,
+				Pulses: []*Pulse{
+					{Ticks: 0, Velocity: 90}, nil, nil, nil,
+					nil, nil, nil, nil,
+					{Ticks: 192, Velocity: 90}, nil, nil, nil,
+					nil, nil, nil, nil,
+				},
+			},
+			{Grid: One16,
+				PPQN: 96,
+				Pulses: []*Pulse{
+					nil, nil, nil, nil,
+					{Ticks: 96, Velocity: 90}, nil, nil, nil,
+					nil, nil, nil, nil,
+					{Ticks: 288, Velocity: 90}, nil, nil, nil,
+				},
+			},
+		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFromString(tt.want.Grid, tt.str)[0].PPQN; !reflect.DeepEqual(got, tt.want.PPQN) {
-				t.Errorf("NewFromString().PPQN = %d, want %d", got, tt.want.PPQN)
-			}
-			if got := NewFromString(tt.want.Grid, tt.str)[0].Grid; !reflect.DeepEqual(got, tt.want.Grid) {
-				t.Errorf("NewFromString().grid = %s, want %s", got, tt.want.Grid)
-			}
-			if got := NewFromString(tt.want.Grid, tt.str)[0].Pulses.String(); !reflect.DeepEqual(got, tt.want.Pulses.String()) {
-				t.Errorf("NewFromString() = %s, want %s", got, tt.want.Pulses)
+			got := NewFromString(tt.want[0].Grid, tt.str)
+			for i, want := range tt.want {
+				if !reflect.DeepEqual(got[i].PPQN, want.PPQN) {
+					t.Errorf("[%d] NewFromString().PPQN = %d, want %d", i, got[i].PPQN, want.PPQN)
+				}
+				if !reflect.DeepEqual(got[i].Grid, want.Grid) {
+					t.Errorf("[%d] NewFromString().grid = %s, want %s", i, got[i].Grid, want.Grid)
+				}
+				if !reflect.DeepEqual(got[i].Pulses.String(), want.Pulses.String()) {
+					t.Errorf("[%d] NewFromString() = %s, want %s", i, got[i].Pulses.String(), want.Pulses)
+				}
 			}
 		})
 	}
