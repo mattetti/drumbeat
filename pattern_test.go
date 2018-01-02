@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/go-audio/midi"
 )
 
 func TestPulses_Offset(t *testing.T) {
@@ -108,6 +110,74 @@ func TestNewFromString(t *testing.T) {
 				{Ticks: 192, Velocity: 90}, nil, nil, nil,
 				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
 		},
+		{name: "basic with name at the beginning", str: "[Kick]x...x...x...x...", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Name: "Kick",
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with name at the end", str: "x...x...x...x...[Kick]", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Name: "Kick",
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with name in the middle", str: "x...x...	[Kick]	x...x...", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Name: "Kick",
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with a bracket but no names", str: "x[..x...	x...x...", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with key at the beginning", str: "{D2}x...x...x...x...", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Key:  midi.KeyInt("D", 2),
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with key at the end", str: "x...x...x...x...{C#3}", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Key:  midi.KeyInt("C#", 3),
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
+		{name: "basic with bad key data", str: "{noteAKey}x...x...x...x...", want: []*Pattern{{
+			Grid: One16,
+			PPQN: 96,
+			Pulses: []*Pulse{
+				{Ticks: 0, Velocity: 90}, nil, nil, nil,
+				{Ticks: 96, Velocity: 90}, nil, nil, nil,
+				{Ticks: 192, Velocity: 90}, nil, nil, nil,
+				{Ticks: 288, Velocity: 90}, nil, nil, nil}}},
+		},
 		{name: "with uppercase X", str: "X...x...X...X...", want: []*Pattern{{
 			Grid: One16,
 			PPQN: 96,
@@ -158,6 +228,12 @@ func TestNewFromString(t *testing.T) {
 				}
 				if !reflect.DeepEqual(got[i].Grid, want.Grid) {
 					t.Errorf("[%d] NewFromString().grid = %s, want %s", i, got[i].Grid, want.Grid)
+				}
+				if !reflect.DeepEqual(got[i].Name, want.Name) {
+					t.Errorf("[%d] NewFromString().Name = %s, want %s", i, got[i].Name, want.Name)
+				}
+				if !reflect.DeepEqual(got[i].Key, want.Key) {
+					t.Errorf("[%d] NewFromString().Key = %d, want %d", i, got[i].Key, want.Key)
 				}
 				if !reflect.DeepEqual(got[i].Pulses.String(), want.Pulses.String()) {
 					t.Errorf("[%d] NewFromString() = %s, want %s", i, got[i].Pulses.String(), want.Pulses)

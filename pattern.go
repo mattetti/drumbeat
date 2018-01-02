@@ -2,7 +2,10 @@ package drumbeat
 
 import (
 	"math"
+	"strconv"
 	"strings"
+
+	"github.com/go-audio/midi"
 )
 
 var (
@@ -24,7 +27,31 @@ func NewFromString(grid GridRes, str string) []*Pattern {
 		pat := &Pattern{PPQN: DefaultPPQN, Grid: grid}
 		gridRes := ppqn / grid.StepsInBeat()
 
+		// Name
+		nameStartIDX := strings.IndexByte(patStr, '[')
+		nameEndIDX := strings.IndexByte(patStr, ']')
+		if nameStartIDX != -1 && nameEndIDX != -1 {
+			pat.Name = patStr[nameStartIDX+1 : nameEndIDX]
+			patStr = patStr[:nameStartIDX] + patStr[nameEndIDX+1:]
+		}
+
+		// Key
+		keyStartIDX := strings.IndexByte(patStr, '{')
+		keyEndIDX := strings.IndexByte(patStr, '}')
+		if keyStartIDX != -1 && keyEndIDX != -1 {
+			keyStr := patStr[keyStartIDX+1 : keyEndIDX]
+			if l := len(keyStr); l > 1 {
+				oct, err := strconv.Atoi(string(keyStr[l-1]))
+				if err == nil {
+					keyLetter := string(keyStr[:l-1])
+					pat.Key = midi.KeyInt(keyLetter, oct)
+				}
+			}
+			patStr = patStr[:keyStartIDX] + patStr[keyEndIDX+1:]
+		}
+
 		patStr = patStrReplacer.Replace(patStr)
+
 		pat.Pulses = make(Pulses, len(patStr))
 		for i, r := range strings.ToLower(patStr) {
 			if r == 'x' {
