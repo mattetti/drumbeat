@@ -9,8 +9,11 @@ import (
 )
 
 func ExampleNewFromString() {
-	patternStr := "x.xxx...x...x.x.x..x.xx.x..x.xxx"
-	patterns := drumbeat.NewFromString(drumbeat.One8, patternStr)
+	patterns := drumbeat.NewFromString(drumbeat.One16, `
+		[kick]	{C1}	x.x.......xx...x	x.x.....x......x;
+		[snare]	{D1}	....x.......x...	....x.......x...;
+		[hihat]	{F#1}	x.x.x.x.x.x.x.x.	x.x.x.x.x.x.x.x.
+	`)
 	f, err := os.Create("drumbeat.mid")
 	if err != nil {
 		log.Println("something wrong happened when creating the MIDI file", err)
@@ -19,8 +22,8 @@ func ExampleNewFromString() {
 	if err := drumbeat.ToMIDI(f, patterns...); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("drumbeat.mid generated off of", patternStr)
-	// Output: drumbeat.mid generated off of x.xxx...x...x.x.x..x.xx.x..x.xxx
+	fmt.Println("drumbeat.mid generated")
+	// Output: drumbeat.mid generated
 	f.Close()
 	os.Remove(f.Name())
 }
