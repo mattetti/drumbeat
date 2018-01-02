@@ -51,7 +51,7 @@ func main() {
 	kickSeq := euclidean.Rhythm(*genPulses/2, *genSteps/2)
 	// The second time, we through in an extra kick, for free
 	kickSeq = append(kickSeq, euclidean.Rhythm((*genPulses/2)+1, *genSteps/2)...)
-	kickBeat := drumbeat.NewFromString(boolsToSeq(kickSeq))[0]
+	kickBeat := drumbeat.NewFromString(drumbeat.One16, boolsToSeq(kickSeq))[0]
 	if *genOffset != 0 {
 		kickBeat.Offset(*genOffset)
 	}
@@ -59,7 +59,7 @@ func main() {
 	kickBeat.Name = "Kick"
 
 	snareSeq := euclidean.Rhythm((*genPulses/2)+1, *genSteps)
-	snareBeat := drumbeat.NewFromString(boolsToSeq(snareSeq))[0]
+	snareBeat := drumbeat.NewFromString(drumbeat.One16, boolsToSeq(snareSeq))[0]
 	snareBeat.Offset(4)
 	snareBeat.Key = midi.KeyInt("D", 1)
 	snareBeat.Name = "Snare"
@@ -82,7 +82,7 @@ func main() {
 	if leftOver > 0 {
 		hatSeq = append(hatSeq, hatSeq[len(hatSeq)-leftOver:]...)
 	}
-	hatBeat := drumbeat.NewFromString(boolsToSeq(hatSeq))[0]
+	hatBeat := drumbeat.NewFromString(drumbeat.One16, boolsToSeq(hatSeq))[0]
 	hatBeat.Key = midi.KeyInt("F#", 1)
 	hatBeat.Name = "HiHat"
 
