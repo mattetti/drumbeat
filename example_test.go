@@ -22,10 +22,24 @@ func ExampleNewFromString() {
 	if err := drumbeat.ToMIDI(f, patterns...); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("drumbeat.mid generated")
-	// Output: drumbeat.mid generated
 	f.Close()
+	fmt.Println("drumbeat.mid generated")
+
+	imgf, err := os.Create("drumbeat.png")
+	if err != nil {
+		log.Println("something wrong happened when creating the image file", err)
+		os.Exit(1)
+	}
+	if err := drumbeat.SaveAsPNG(imgf, patterns); err != nil {
+		log.Fatal(err)
+	}
+	imgf.Close()
+	fmt.Println("drumbeat.png generated")
+	// Output: drumbeat.mid generated
+	// drumbeat.png generated
+
 	os.Remove(f.Name())
+	os.Remove(imgf.Name())
 }
 
 func ExampleFromMIDI() {
