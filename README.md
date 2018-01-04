@@ -14,10 +14,10 @@ More information and documentation available at [![GoDoc](https://godoc.org/gith
 ```go
 // define a pattern using text:
 patterns := drumbeat.NewFromString(drumbeat.One16, `
-		[kick]	{C1}	x.x.......xx...x	x.x.....x......x;
-		[snare]	{D1}	....x.......x...	....x.......x...;
-		[hihat]	{F#1}	x.x.x.x.x.x.x.x.	x.x.x.x.x.x.x.x.
-    `)
+	[kick]	{C1}	x.x.......xx...x	x.x.....x......x;
+	[snare]	{D1}	....x.......x...	....x.......x...;
+	[hihat]	{F#1}	x.x.x.x.x.x.x.x.	x.x.x.x.x.x.x.x.
+`)
 
 // convert to MIDI
 f, err := os.Create("drumbeat.mid")
@@ -41,3 +41,5 @@ if err := drumbeat.SaveAsPNG(imgf, patterns); err != nil {
 }
 imgf.Close()
 ```
+
+![png output](https://github.com/mattetti/drumbeat/blob/master/example.png?raw=true)
