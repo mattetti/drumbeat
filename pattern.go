@@ -81,7 +81,21 @@ type Pattern struct {
 	// PPQN is the amount of ticks per quarter note.
 	PPQN uint16
 	// Grid is the resolution of the pattern
-	Grid GridRes
+	Grid       GridRes
+	countCache int
+}
+
+func (p *Pattern) ActivePulses() int {
+	if p.countCache != 0 {
+		return p.countCache
+	}
+	p.countCache = 0
+	for _, s := range p.Pulses {
+		if s != nil && s.Velocity > 0 {
+			p.countCache++
+		}
+	}
+	return p.countCache
 }
 
 // ReAlign adds the nil steps if the pulses are unbalanced and reorder the steps
