@@ -1,0 +1,9 @@
+github.com/go-audio/midi v1.0.0 h1:xeDg6E0ygfpsTPRTi1GdrGcDvJ8zt9pemqOJ5cHoLZ8=
+github.com/go-audio/midi v1.0.0/go.mod h1:PoFcd6KPFUn++NHd1libpb/WifNIb/qKVvZ71McMVmo=
+github.com/mattetti/audio v0.0.0-20190404201502-c6aebeb78429 h1:5YWANgpchDSYJ0R6i3ODpZ4KN/1Jm9MZcFDtAtegjNM=
+github.com/mattetti/audio v0.0.0-20190404201502-c6aebeb78429/go.mod h1:LlQmBGkOuV/SKzEDXBPKauvN2UqCgzXO2XjecTGj40s=
+github.com/mattetti/filebuffer v1.0.0 h1:ixTvQ0JjBTwWbdpDZ98lLrydo7KRi8xNRIi5RFszsbY=
+github.com/mattetti/filebuffer v1.0.0/go.mod h1:X6nyAIge2JGVmuJt2MFCqmHrb/5IHiphfHtot0s5cnI=
+golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f h1:FO4MZ3N56GnxbqxGKqh+YTzUWQ2sDwtFQEZgLOxh9Jc=
+golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
